@@ -1,85 +1,309 @@
 <template>
-  <div>
-    <header class="mb-8">
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
-        <h1 class="text-3xl font-bold text-gray-900">User Management</h1>
-        <button class="btn-primary w-full sm:w-auto" @click="openNewUserModal">
-          Add New User
-        </button>
+  <div class="min-h-screen bg-gray-50">
+    <!-- Page Header -->
+    <header class="bg-white border-b border-gray-200 shadow-sm mb-8 p-6">
+      <div class="max-w-7xl mx-auto">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">User Management</h1>
+            <p class="mt-1 text-sm text-gray-500">Manage users, roles, and permissions</p>
+          </div>
+          <button 
+            class="px-4 py-2.5 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center w-full sm:w-auto"
+            @click="openNewUserModal"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            Add New User
+          </button>
+        </div>
       </div>
     </header>
 
-    <!-- Search and Filters -->
-    <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Search Users</label>
-        <input
-          type="text"
-          v-model="searchQuery"
-          placeholder="Search by name or ID..."
-          class="input-field mt-1"
-        />
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Role</label>
-        <select v-model="roleFilter" class="input-field mt-1">
-          <option value="all">All Roles</option>
-          <option value="admin">Admin</option>
-          <option value="worker">Worker</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Horizontal Table (Above 1024px) -->
-    <div class="bg-white shadow-sm rounded-lg overflow-x-auto hidden lg:block">
-      <table class="w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Savings</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Active Loans</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="user in filteredUsers" :key="user.id">
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="flex items-center">
-                <div class="h-10 w-10 flex-shrink-0">
-                  <img
-                    class="h-10 w-10 rounded-full"
-                    :src="user.avatar"
-                    alt=""
-                  />
-                </div>
-                <div class="ml-4">
-                  <div class="text-sm font-medium text-gray-900">{{ user.name }}</div>
-                  <div class="text-sm text-gray-500">{{ user.email }}</div>
-                </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Stats Overview
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200 hover:shadow-md transition-shadow duration-300">
+          <div class="p-5">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <span class="inline-flex items-center justify-center h-12 w-12 rounded-md bg-emerald-100 text-emerald-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </span>
               </div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">Total Users</dt>
+                  <dd class="flex items-baseline">
+                    <div class="text-2xl font-semibold text-gray-900">{{ users.length }}</div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200 hover:shadow-md transition-shadow duration-300">
+          <div class="p-5">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <span class="inline-flex items-center justify-center h-12 w-12 rounded-md bg-purple-100 text-purple-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </span>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">Admin Users</dt>
+                  <dd class="flex items-baseline">
+                    <div class="text-2xl font-semibold text-gray-900">
+                      {{ users.filter(u => u.role === 'admin').length }}
+                    </div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200 hover:shadow-md transition-shadow duration-300">
+          <div class="p-5">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <span class="inline-flex items-center justify-center h-12 w-12 rounded-md bg-blue-100 text-blue-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </span>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">Worker Users</dt>
+                  <dd class="flex items-baseline">
+                    <div class="text-2xl font-semibold text-gray-900">
+                      {{ users.filter(u => u.role === 'worker').length }}
+                    </div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200 hover:shadow-md transition-shadow duration-300">
+          <div class="p-5">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <span class="inline-flex items-center justify-center h-12 w-12 rounded-md bg-green-100 text-green-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </span>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">Active Users</dt>
+                  <dd class="flex items-baseline">
+                    <div class="text-2xl font-semibold text-gray-900">
+                      {{ users.filter(u => u.status === 'active').length }}
+                    </div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div> -->
+
+      <!-- Search and Filters -->
+      <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6 mb-8">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Search Users</label>
+            <div class="relative rounded-md shadow-sm">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                v-model="searchQuery"
+                placeholder="Search by name, email or ID..."
+                class="focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Filter by Role</label>
+            <select 
+              v-model="roleFilter" 
+              class="focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 rounded-md"
+            >
+              <option value="all">All Roles</option>
+              <option value="admin">Admin</option>
+              <option value="worker">Worker</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Filter by Status</label>
+            <select 
+              v-model="statusFilter" 
+              class="focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 rounded-md"
+            >
+              <option value="all">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Summary -->
+      <div class="flex justify-between items-center mb-4">
+        <p class="text-sm text-gray-600">
+          Showing <span class="font-medium">{{ filteredUsers.length }}</span> of <span class="font-medium">{{ users.length }}</span> users
+        </p>
+        <div class="flex space-x-2">
+          <button class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            Export
+          </button>
+          <button class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filter
+          </button>
+        </div>
+      </div>
+
+      <!-- Horizontal Table (Above 1024px) -->
+      <div class="bg-white shadow-sm rounded-lg overflow-hidden hidden lg:block mb-8">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Savings</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Active Loans</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-for="user in filteredUsers" :key="user.id" class="hover:bg-gray-50 transition-colors duration-150">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="h-10 w-10 flex-shrink-0">
+                    <img
+                      class="h-10 w-10 rounded-full object-cover border border-gray-200"
+                      :src="user.avatar"
+                      alt=""
+                    />
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-900">{{ user.name }}</div>
+                    <div class="text-sm text-gray-500">{{ user.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full"
+                  :class="{
+                    'bg-purple-100 text-purple-800': user.role === 'admin',
+                    'bg-emerald-100 text-emerald-800': user.role === 'worker'
+                  }"
+                >
+                  {{ user.role }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                ₦{{ formatCurrency(user.totalSavings) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <span class="text-sm text-gray-900">{{ user.activeLoans }}</span>
+                  <span v-if="user.activeLoans > 0" class="ml-2 flex-shrink-0 h-2 w-2 rounded-full bg-emerald-500"></span>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full"
+                  :class="{
+                    'bg-green-100 text-green-800': user.status === 'active',
+                    'bg-red-100 text-red-800': user.status === 'inactive'
+                  }"
+                >
+                  {{ user.status }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button
+                  @click="viewUserDetails(user)"
+                  class="text-emerald-600 hover:text-emerald-900 mr-4 transition-colors duration-150"
+                >
+                  View
+                </button>
+                <!-- <button
+                  @click="editUser(user)"
+                  class="text-emerald-600 hover:text-emerald-900 transition-colors duration-150"
+                >
+                  Edit
+                </button> -->
+              </td>
+            </tr>
+            <tr v-if="filteredUsers.length === 0">
+              <td colspan="6" class="px-6 py-10 text-center text-sm text-gray-500">
+                <div class="flex flex-col items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p>No users found matching your criteria</p>
+                  <button 
+                    @click="clearFilters" 
+                    class="mt-2 text-emerald-600 hover:text-emerald-500 font-medium"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Vertical Cards (1024px or less) -->
+      <div class="block lg:hidden space-y-4 mb-8">
+        <div 
+          v-for="user in filteredUsers" 
+          :key="user.id" 
+          class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300"
+        >
+          <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+            <div class="flex items-center">
+              <img 
+                :src="user.avatar" 
+                alt="" 
+                class="h-10 w-10 rounded-full object-cover border border-gray-200"
+              />
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-gray-900">{{ user.name }}</h3>
+                <p class="text-xs text-gray-500">{{ user.email }}</p>
+              </div>
+            </div>
+            <div class="flex space-x-2">
               <span
-                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                :class="{
-                  'bg-purple-100 text-purple-800': user.role === 'admin',
-                  'bg-blue-100 text-blue-800': user.role === 'worker'
-                }"
-              >
-                {{ user.role }}
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-              ₦{{ formatCurrency(user.totalSavings) }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-              {{ user.activeLoans }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span
-                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                class="px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full"
                 :class="{
                   'bg-green-100 text-green-800': user.status === 'active',
                   'bg-red-100 text-red-800': user.status === 'inactive'
@@ -87,188 +311,260 @@
               >
                 {{ user.status }}
               </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-              <button
-                @click="viewUserDetails(user)"
-                class="text-blue-600 hover:text-blue-900 mr-4"
-              >
-                View Details
-              </button>
-              <button
-                @click="editUser(user)"
-                class="text-blue-600 hover:text-blue-900"
-              >
-                Edit
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Vertical Table (1026px or less) -->
-    <div class="bg-white shadow-sm rounded-lg block lg:hidden">
-      <table v-for="user in filteredUsers" :key="user.id" class="w-full mb-4 border-b divide-y divide-gray-200">
-        <tbody>
-          <tr>
-            <th scope="row" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3 bg-gray-50">User</th>
-            <td class="px-4 py-4 whitespace-normal w-2/3">
-              <div class="flex items-center">
-                <div class="h-10 w-10 flex-shrink-0">
-                  <img
-                    class="h-10 w-10 rounded-full"
-                    :src="user.avatar"
-                    alt=""
-                  />
-                </div>
-                <div class="ml-4">
-                  <div class="text-sm font-medium text-gray-900">{{ user.name }}</div>
-                  <div class="text-sm text-gray-500">{{ user.email }}</div>
-                </div>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <th scope="row" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3 bg-gray-50">Role</th>
-            <td class="px-4 py-4 whitespace-normal w-2/3">
               <span
-                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                class="px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full"
                 :class="{
                   'bg-purple-100 text-purple-800': user.role === 'admin',
-                  'bg-blue-100 text-blue-800': user.role === 'worker'
+                  'bg-emerald-100 text-emerald-800': user.role === 'worker'
                 }"
               >
                 {{ user.role }}
               </span>
-            </td>
-          </tr>
-          <tr>
-            <th scope="row" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3 bg-gray-50">Total Savings</th>
-            <td class="px-4 py-4 whitespace-normal w-2/3 text-sm text-gray-900">₦{{ formatCurrency(user.totalSavings) }}</td>
-          </tr>
-          <tr>
-            <th scope="row" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3 bg-gray-50">Active Loans</th>
-            <td class="px-4 py-4 whitespace-normal w-2/3 text-sm text-gray-900">{{ user.activeLoans }}</td>
-          </tr>
-          <tr>
-            <th scope="row" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3 bg-gray-50">Status</th>
-            <td class="px-4 py-4 whitespace-normal w-2/3">
-              <span
-                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                :class="{
-                  'bg-green-100 text-green-800': user.status === 'active',
-                  'bg-red-100 text-red-800': user.status === 'inactive'
-                }"
-              >
-                {{ user.status }}
+            </div>
+          </div>
+          <div class="p-4 grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-xs font-medium text-gray-500">Total Savings</p>
+              <p class="text-sm font-semibold text-gray-900">₦{{ formatCurrency(user.totalSavings) }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-gray-500">Active Loans</p>
+              <div class="flex items-center">
+                <p class="text-sm font-semibold text-gray-900">{{ user.activeLoans }}</p>
+                <span v-if="user.activeLoans > 0" class="ml-2 flex-shrink-0 h-2 w-2 rounded-full bg-emerald-500"></span>
+              </div>
+            </div>
+          </div>
+          <div class="px-4 py-3 bg-gray-50 flex justify-end space-x-3">
+            <button
+              @click="viewUserDetails(user)"
+              class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-emerald-700 bg-emerald-100 hover:bg-emerald-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-150"
+            >
+              View Details
+            </button>
+            <!-- <button
+              @click="editUser(user)"
+              class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-150"
+            >
+              Edit
+            </button> -->
+          </div>
+        </div>
+        
+        <div v-if="filteredUsers.length === 0" class="bg-white shadow-sm rounded-lg border border-gray-200 p-8 text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p class="text-gray-500 mb-2">No users found matching your criteria</p>
+          <button 
+            @click="clearFilters" 
+            class="text-emerald-600 hover:text-emerald-500 font-medium"
+          >
+            Clear filters
+          </button>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="bg-white px-4 py-3 flex items-center justify-between border border-gray-200 rounded-lg shadow-sm sm:px-6 mb-8">
+        <div class="flex-1 flex justify-between sm:hidden">
+          <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            Previous
+          </button>
+          <button class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            Next
+          </button>
+        </div>
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+          <div>
+            <p class="text-sm text-gray-700">
+              Showing <span class="font-medium">1</span> to <span class="font-medium">{{ Math.min(filteredUsers.length, 10) }}</span> of <span class="font-medium">{{ filteredUsers.length }}</span> results
+            </p>
+          </div>
+          <div>
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+              <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <span class="sr-only">Previous</span>
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-emerald-50 text-sm font-medium text-emerald-600 hover:bg-emerald-100">
+                1
+              </button>
+              <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                2
+              </button>
+              <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                3
+              </button>
+              <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                ...
               </span>
-            </td>
-          </tr>
-          <tr>
-            <th scope="row" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3 bg-gray-50">Actions</th>
-            <td class="px-4 py-4 whitespace-normal w-2/3 text-right text-sm font-medium">
-              <button
-                @click="viewUserDetails(user)"
-                class="text-blue-600 hover:text-blue-900 mr-4"
-              >
-                View Details
+              <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <span class="sr-only">Next</span>
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
               </button>
-              <button
-                @click="editUser(user)"
-                class="text-blue-600 hover:text-blue-900"
-              >
-                Edit
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </nav>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- User Form Modal -->
-    <div v-if="isUserModalOpen" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+    <div v-if="isUserModalOpen" class="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+      <div class="relative mx-auto p-6 border w-full max-w-md shadow-xl rounded-lg bg-white">
+        <button 
+          @click="closeUserModal" 
+          class="absolute top-4 right-4 text-gray-400 hover:text-gray-500"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
         <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900">{{ selectedUser ? 'Edit User' : 'Add New User' }}</h3>
-          <div class="mt-2">
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">ID</label>
+          <h3 class="text-lg font-medium text-gray-900 mb-5">{{ selectedUser ? 'Edit User' : 'Add New User' }}</h3>
+          <div class="mt-2 space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">ID</label>
               <input
                 v-model="formUser.id"
                 type="text"
-                class="input-field mt-1"
+                class="focus:ring-emerald-500 focus:border-emerald-500 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                 placeholder="e.g., USR001"
                 :disabled="selectedUser !== null"
               />
             </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">Name</label>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
               <input
                 v-model="formUser.name"
                 type="text"
-                class="input-field mt-1"
+                class="focus:ring-emerald-500 focus:border-emerald-500 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                 placeholder="e.g., John Doe"
               />
             </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">Email</label>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
                 v-model="formUser.email"
                 type="email"
-                class="input-field mt-1"
+                class="focus:ring-emerald-500 focus:border-emerald-500 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                 placeholder="e.g., john@example.com"
               />
             </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">Role</label>
-              <select v-model="formUser.role" class="input-field mt-1">
-                <option value="admin">Admin</option>
-                <option value="worker">Worker</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">Status</label>
-              <select v-model="formUser.status" class="input-field mt-1">
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">Avatar URL</label>
-              <input
-                v-model="formUser.avatar"
-                type="text"
-                class="input-field mt-1"
-                placeholder="e.g., https://example.com/avatar.jpg"
-              />
-            </div>
           </div>
-          <div class="flex justify-end gap-2">
-            <button @click="closeUserModal" class="btn-secondary">Cancel</button>
-            <button @click="handleUserSubmit" class="btn-primary">Save</button>
+          <div class="mt-6 flex justify-end gap-3">
+            <button 
+              @click="closeUserModal" 
+              class="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+            >
+              Cancel
+            </button>
+            <button 
+              @click="handleUserSubmit" 
+              class="px-4 py-2 bg-emerald-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+            >
+              Save
+            </button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- User Details Modal -->
-    <div v-if="showDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+    <div v-if="showDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+      <div class="relative mx-auto p-6 border w-full max-w-md shadow-xl rounded-lg bg-white">
+        <button 
+          @click="closeDetailsModal" 
+          class="absolute top-4 right-4 text-gray-400 hover:text-gray-500"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
         <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900">User Details</h3>
-          <div class="mt-2 space-y-2">
-            <p><strong>ID:</strong> {{ selectedUser.id }}</p>
-            <p><strong>Name:</strong> {{ selectedUser.name }}</p>
-            <p><strong>Email:</strong> {{ selectedUser.email }}</p>
-            <p><strong>Role:</strong> {{ selectedUser.role }}</p>
-            <p><strong>Total Savings:</strong> ₦{{ formatCurrency(selectedUser.totalSavings) }}</p>
-            <p><strong>Active Loans:</strong> {{ selectedUser.activeLoans }}</p>
-            <p><strong>Status:</strong> {{ selectedUser.status }}</p>
-            <p><strong>Avatar:</strong> <img :src="selectedUser.avatar" alt="User Avatar" class="h-16 w-16 rounded-full" /></p>
+          <div class="flex items-center mb-6">
+            <img 
+              :src="selectedUser?.avatar" 
+              alt="User Avatar" 
+              class="h-16 w-16 rounded-full object-cover border-2 border-emerald-500 mr-4" 
+            />
+            <div>
+              <h3 class="text-xl font-bold text-gray-900">{{ selectedUser?.name }}</h3>
+              <p class="text-sm text-gray-500">{{ selectedUser?.email }}</p>
+            </div>
           </div>
-          <div class="mt-4 flex justify-end">
-            <button @click="closeDetailsModal" class="btn-secondary">Close</button>
+          
+          <div class="bg-gray-50 rounded-lg p-4 mb-6">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <p class="text-xs font-medium text-gray-500 mb-1">ID</p>
+                <p class="text-sm font-semibold text-gray-900">{{ selectedUser?.id }}</p>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-gray-500 mb-1">Role</p>
+                <span
+                  class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full"
+                  :class="{
+                    'bg-purple-100 text-purple-800': selectedUser?.role === 'admin',
+                    'bg-emerald-100 text-emerald-800': selectedUser?.role === 'worker'
+                  }"
+                >
+                  {{ selectedUser?.role }}
+                </span>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-gray-500 mb-1">Status</p>
+                <span
+                  class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full"
+                  :class="{
+                    'bg-green-100 text-green-800': selectedUser?.status === 'active',
+                    'bg-red-100 text-red-800': selectedUser?.status === 'inactive'
+                  }"
+                >
+                  {{ selectedUser?.status }}
+                </span>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-gray-500 mb-1">Joined</p>
+                <p class="text-sm font-semibold text-gray-900">May 12, 2023</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-6">
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Financial Summary</h4>
+            <div class="bg-gray-50 rounded-lg p-4 grid grid-cols-2 gap-4">
+              <div>
+                <p class="text-xs font-medium text-gray-500 mb-1">Total Savings</p>
+                <p class="text-lg font-bold text-emerald-600">₦{{ formatCurrency(selectedUser?.totalSavings) }}</p>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-gray-500 mb-1">Active Loans</p>
+                <p class="text-lg font-bold text-blue-600">{{ selectedUser?.activeLoans }}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex justify-between">
+            <!-- <button 
+              @click="editUser(selectedUser)" 
+              class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit User
+            </button> -->
+            <button 
+              @click="closeDetailsModal" 
+              class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+            >
+              Close
+            </button>
           </div>
         </div>
       </div>
@@ -396,6 +692,7 @@ const users = computed(() => {
 // State
 const searchQuery = ref('')
 const roleFilter = ref('all')
+const statusFilter = ref('all')
 const isUserModalOpen = ref(false)
 const showDetailsModal = ref(false)
 const selectedUser = ref(null)
@@ -424,6 +721,10 @@ const filteredUsers = computed(() => {
       return false
     }
     
+    if (statusFilter.value !== 'all' && user.status !== statusFilter.value) {
+      return false
+    }
+    
     return true
   })
 })
@@ -434,6 +735,12 @@ const formatCurrency = (value) => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   })
+}
+
+const clearFilters = () => {
+  searchQuery.value = ''
+  roleFilter.value = 'all'
+  statusFilter.value = 'all'
 }
 
 const openNewUserModal = () => {
@@ -515,15 +822,34 @@ const handleUserSubmit = () => {
 </script>
 
 <style scoped>
-.btn-primary {
-  @apply px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+/* Custom transitions */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
 }
 
-.btn-secondary {
-  @apply px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
-.input-field {
-  @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
+/* Custom scrollbar for tables */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 </style>

@@ -10,5 +10,5 @@
 <script setup>
 import { useRoute } from 'vue-router'
 const route = useRoute()
-const showNav = computed(() => !route.path.includes('/login') && !route.path.includes('/user'))
+const showNav = computed(() => !route.path.includes('/login') && route.path !== '/')
 </script>
