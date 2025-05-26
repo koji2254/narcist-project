@@ -12,7 +12,7 @@
             <input
               id="email"
               name="email"
-              type="email"
+              type=""
               autocomplete="email"
               required
               v-model="email"
@@ -53,6 +53,7 @@
 </template>
 
 <script setup>
+import { baseUrl } from '~/assets/proxy'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -61,21 +62,27 @@ const password = ref('')
 const errorMessage = ref('')
 const router = useRouter()
 
+console.log(baseUrl)
+
 const handleLogin = async () => {
-  try {
-    // Demo credentials check
-    if (email.value === 'admin@narict.com' && password.value === 'password') {
-      errorMessage.value = ''
-      router.push('/dashboard') // Admin navigates to dashboard
-    } else if (email.value === 'user@narict.com' && password.value === 'userpassword') {
-      errorMessage.value = ''
-      router.push('/user') // User navigates to user page
-    } else {
-      throw new Error('Invalid email or password. Use admin@narict.com/password for admin or user@narict.com/userpassword for user demo.')
-    }
-  } catch (error) {
-    errorMessage.value = error.message
-    console.error('Login failed:', error)
-  }
+  // try {
+  //   // Demo credentials check
+  //   if (email.value === 'admin@narict.com' && password.value === 'password') {
+  //     errorMessage.value = ''
+  //     router.push('/dashboard') // Admin navigates to dashboard
+  //   } else if (email.value === 'user@narict.com' && password.value === 'userpassword') {
+  //     errorMessage.value = ''
+  //     router.push('/user') // User navigates to user page
+  //   } else {
+  //     throw new Error('Invalid email or password. Use admin@narict.com/password for admin or user@narict.com/userpassword for user demo.')
+  //   }
+  // } catch (error) {
+  //   errorMessage.value = error.message
+  //   console.error('Login failed:', error)
+  // }
+
+  
+
+
 }
 </script>

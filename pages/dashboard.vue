@@ -1,159 +1,11 @@
-<template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Mobile menu button -->
-    <div class="fixed top-4 left-4 z-20 lg:hidden">
-      <button @click="sidebarOpen = !sidebarOpen" class="p-2 rounded-md text-gray-500 hover:text-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
-        <span class="sr-only">Open sidebar</span>
-        <Bars3Icon v-if="!sidebarOpen" class="h-6 w-6" />
-        <XMarkIcon v-else class="h-6 w-6" />
-      </button>
-    </div>
 
-    <!-- Main Content -->
-    <main>
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <!-- Welcome Card -->
-        <div class="bg-white shadow-sm rounded-lg border border-gray-200 mb-8 overflow-hidden">
-          <div class="p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between">
-            <div class="mb-4 sm:mb-0">
-              <h2 class="text-xl font-bold text-gray-900 mb-2">Welcome back, Admin!</h2>
-              <p class="text-gray-500">Here's what's happening with your organization today.</p>
-            </div>
-            <img src="@/public/narict logo.jpg" alt="Logo" class="h-16 w-16 rounded-full object-cover border-2 border-gray-200 shadow-md" />
-          </div>
-          <div class="bg-gray-50 px-6 py-3 border-t border-gray-200">
-            <div class="flex items-center text-gray-500">
-              <ClockIcon class="h-5 w-5 mr-2" />
-              <span>Last login: Today at 09:30 AM</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          <div v-for="stat in stats" :key="stat.name" class="bg-white shadow-sm rounded-lg border border-gray-200 hover:shadow-md transition-shadow duration-300">
-            <div class="p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <span class="inline-flex items-center justify-center h-12 w-12 rounded-md" :class="stat.bgColor">
-                    <component :is="stat.icon" class="h-6 w-6 text-white" aria-hidden="true" />
-                  </span>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">{{ stat.name }}</dt>
-                    <dd class="flex items-baseline">
-                      <div class="text-2xl font-semibold text-gray-900">{{ stat.value }}</div>
-                      <div v-if="stat.change" :class="[stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600', 'ml-2 flex items-baseline text-sm font-semibold']">
-                        <ArrowUpIcon v-if="stat.changeType === 'increase'" class="self-center flex-shrink-0 h-4 w-4 text-green-500" aria-hidden="true" />
-                        <ArrowDownIcon v-else class="self-center flex-shrink-0 h-4 w-4 text-red-500" aria-hidden="true" />
-                        <span class="sr-only">{{ stat.changeType === 'increase' ? 'Increased' : 'Decreased' }} by</span>
-                        {{ stat.change }}
-                      </div>
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-            <div class="bg-gray-50 px-5 py-3 border-t border-gray-200">
-              <div class="text-sm">
-                <a href="#" class="font-medium text-emerald-600 hover:text-emerald-500 transition-colors duration-150">
-                  View details
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-8">
-          <!-- Recent Activity -->
-          <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
-            <div class="px-6 py-5 border-b border-gray-200 bg-gray-50">
-              <div class="flex items-center justify-between">
-                <h2 class="text-lg font-medium text-gray-900">Recent Activity</h2>
-                <div class="flex space-x-2">
-                  <button class="p-1 rounded-full text-emerald-600 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-150">
-                    <!-- <RefreshIcon class="h-5 w-5" /> -->
-                  </button>
-                  <button class="p-1 rounded-full text-emerald-600 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-150">
-                    <EllipsisHorizontalIcon class="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div class="px-6 py-4">
-              <div class="flow-root">
-                <ul role="list" class="-my-5 divide-y divide-gray-200">
-                  <li v-for="activity in recentActivity" :key="activity.id" class="py-4 hover:bg-gray-50 rounded-md px-2 transition-colors duration-150">
-                    <div class="flex items-center space-x-4">
-                      <div class="flex-shrink-0">
-                        <span class="inline-flex items-center justify-center h-10 w-10 rounded-full shadow-sm" :class="activity.iconBackground">
-                          <component :is="activity.icon" class="h-5 w-5 text-white" aria-hidden="true" />
-                        </span>
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-900 truncate">{{ activity.person }}</p>
-                        <p class="text-sm text-gray-500 truncate">{{ activity.description }}</p>
-                      </div>
-                      <div>
-                        <p class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{{ activity.date }}</p>
-                      </div>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-              <div class="mt-6">
-                <a href="#" class="w-full flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-150">
-                  View all
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <!-- Savings Summary -->
-          <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
-            <div class="px-6 py-5 border-b border-gray-200 bg-gray-50">
-              <h2 class="text-lg font-medium text-gray-900">Savings Summary</h2>
-            </div>
-            <div class="p-6">
-              <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                <div class="bg-white rounded-lg p-4 border border-gray-200">
-                  <h3 class="text-sm font-medium text-gray-700 mb-2">Total Deposits</h3>
-                  <p class="text-2xl font-bold text-gray-900">₦3,245,678</p>
-                  <div class="mt-2 flex items-center text-sm text-green-600">
-                    <ArrowUpIcon class="h-4 w-4 mr-1" />
-                    <span>12% from last month</span>
-                  </div>
-                </div>
-                <div class="bg-white rounded-lg p-4 border border-gray-200">
-                  <h3 class="text-sm font-medium text-gray-700 mb-2">Total Withdrawals</h3>
-                  <p class="text-2xl font-bold text-gray-900">₦1,567,890</p>
-                  <div class="mt-2 flex items-center text-sm text-red-600">
-                    <ArrowDownIcon class="h-4 w-4 mr-1" />
-                    <span>5% from last month</span>
-                  </div>
-                </div>
-              </div>
-              <div class="mt-6">
-                <h3 class="text-sm font-medium text-gray-700 mb-3">Savings Distribution</h3>
-                <div class="h-60">
-                  <div class="p-6">
-                    <div class="h-64">
-                      <Line :data="chartData" :options="chartOptions" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-</template>
 
 <script setup>
-import { ref } from 'vue'
+import { baseUrl } from '~/assets/proxy'
+import Spinner from '~/components/Spinner.vue'
+import axios from 'axios'
+
+import { ref ,onMounted } from 'vue'
 import { 
   BanknotesIcon, 
   UserGroupIcon, 
@@ -178,84 +30,129 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 const sidebarOpen = ref(true)
 const profileDropdown = ref(false)
+const mainStats = ref(null)
+const isLoading = ref(true)
+const stats = ref([])
+const userDetails = ref(null)
+const recentActivities = ref([])
 
-const stats = [
-  { 
-    name: 'Total Savings', 
-    value: '₦2,456,789', 
-    icon: BanknotesIcon, 
-    bgColor: 'bg-emerald-600',
-    change: '8.2%',
-    changeType: 'increase'
-  },
-  { 
-    name: 'Active Loans', 
-    value: '43', 
-    icon: DocumentTextIcon, 
-    bgColor: 'bg-blue-600',
-    change: '5.1%',
-    changeType: 'increase'
-  },
-  { 
-    name: 'Total Users', 
-    value: '156', 
-    icon: UserGroupIcon, 
-    bgColor: 'bg-purple-600',
-    change: '3.2%',
-    changeType: 'increase'
-  },
-  { 
-    name: 'Monthly Revenue', 
-    value: '₦345,678', 
-    icon: CurrencyDollarIcon, 
-    bgColor: 'bg-amber-600',
-    change: '2.3%',
-    changeType: 'decrease'
-  },
-]
 
-const recentActivity = [
-  {
-    id: 1,
-    person: 'John Doe',
-    description: 'Deposited ₦50,000 to savings account',
-    date: '2 hours ago',
-    icon: BanknotesIcon,
-    iconBackground: 'bg-emerald-500',
-  },
-  {
-    id: 2,
-    person: 'Sarah Johnson',
-    description: 'Requested a loan of ₦200,000',
-    date: '4 hours ago',
-    icon: DocumentTextIcon,
-    iconBackground: 'bg-blue-500',
-  },
-  {
-    id: 3,
-    person: 'Michael Brown',
-    description: 'Made a loan repayment of ₦25,000',
-    date: 'Yesterday',
-    icon: CurrencyDollarIcon,
-    iconBackground: 'bg-amber-500',
-  },
-  {
-    id: 4,
-    person: 'Emily Wilson',
-    description: 'Withdrew ₦30,000 from savings',
-    date: 'Yesterday',
-    icon: BanknotesIcon,
-    iconBackground: 'bg-red-500',
-  },
-  {
-    id: 5,
-    person: 'David Lee',
-    description: 'Registered a new account',
-    date: '2 days ago',
-    icon: UserIcon,
-    iconBackground: 'bg-purple-500',
-  },
-]
+
+const getMainStats = async () => {
+  try {
+    const token = localStorage.getItem('auth_token') // This runs only in the browser
+    const response = await axios.get(`${baseUrl}/dashboard/admin`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    mainStats.value = response.data
+
+        // For Monthly revenuw section
+    const [monthName, revenueAmount] = Object.entries(mainStats.value.monthlyRevenue)[0] || ['N/A', 0]
+    const [yearName, yearAmount] = Object.entries(mainStats.value.yearlyRevenue)[0] || ['N/A', 0]
+
+
+
+        // Build stats array using fetched data
+    stats.value = [
+      { 
+        name: 'Total Savings', 
+        value: mainStats.value.totalSavings, 
+        icon: BanknotesIcon, 
+        bgColor: 'bg-emerald-600',
+        change: '8.2%',
+        changeType: 'increase'
+      },
+      { 
+        name: 'Active Loans', 
+        value: mainStats.value.totalApprovedLoans, 
+        icon: DocumentTextIcon, 
+        bgColor: 'bg-blue-600',
+        change: '5.1%',
+        changeType: 'increase'
+      },
+      { 
+        name: 'Total Users', 
+        value: mainStats.value.totalUsers, 
+        icon: UserGroupIcon, 
+        bgColor: 'bg-purple-600',
+        change: '3.2%',
+        changeType: 'increase'
+      },
+      {
+      name: `Monthly Revenue (${monthName})`,
+      value: `₦${revenueAmount.toLocaleString()}`,
+      icon: CurrencyDollarIcon,
+      bgColor: 'bg-amber-600',
+      change: '2.3%',
+      changeType: 'decrease'
+    },
+      {
+      name: `Yearly Revenue (${yearName})`,
+      value: `₦${yearAmount.toLocaleString()}`,
+      icon: CurrencyDollarIcon,
+      bgColor: 'bg-amber-600',
+      change: '2.3%',
+      changeType: 'decrease'
+    },
+    ]
+  } catch (error) {
+    console.error('Error fetching data:', error)
+  } finally {
+    isLoading.value = false
+  }
+
+
+}
+
+// Get Users Details get-users-details
+const getUsersDetails = async () => {
+  try {
+    const token = localStorage.getItem('auth_token')
+    const response = await axios.get(`${baseUrl}/auth/get-users-details`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    const users = response.data.users
+    const activities = []
+
+    users.forEach((user, index) => {
+      const lastTxn = user.lastSavingTransaction?.[0]
+      if (lastTxn) {
+        const amount = `₦${lastTxn.amount.toLocaleString()}`
+        const action = lastTxn.type === 'withdrawal' ? 'Withdrew' : 'Deposited'
+        const iconColor = lastTxn.type === 'withdrawal' ? 'bg-red-500' : 'bg-emerald-500'
+        
+        activities.push({
+          id: index + 1,
+          person: user.fullName,
+          description: `${action} ${amount} from savings`,
+          date: new Date(lastTxn.date).toLocaleString(), // format to your style
+          icon: BanknotesIcon,
+          iconBackground: iconColor,
+        })
+      }
+    })
+
+    recentActivities.value = activities
+  } catch (error) {
+    console.error('Error fetching data:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+
+
+onMounted(() => {
+  getMainStats() // run only after component is mounted in browser
+
+  getUsersDetails()
+})
+
 
 const recentLoans = [
   {
@@ -412,6 +309,163 @@ const doughnutOptions = {
   animation: { animateScale: true, animateRotate: true }
 }
 </script>
+
+
+
+<template>
+  <Spinner v-if="isLoading" />
+  <div class="min-h-screen bg-gray-50">
+    <!-- Mobile menu button -->
+    <div class="fixed top-4 left-4 z-20 lg:hidden">
+      <button @click="sidebarOpen = !sidebarOpen" class="p-2 rounded-md text-gray-500 hover:text-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+        <span class="sr-only">Open sidebar</span>
+        <Bars3Icon v-if="!sidebarOpen" class="h-6 w-6" />
+        <XMarkIcon v-else class="h-6 w-6" />
+      </button>
+    </div>
+
+    <!-- Main Content -->
+    <main>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Welcome Card -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 mb-8 overflow-hidden">
+          <div class="p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between">
+            <div class="mb-4 sm:mb-0">
+              <h2 class="text-xl font-bold text-gray-900 mb-2">Welcome back, Admin!</h2>
+              <p class="text-gray-500">Here's what's happening with your organization today.</p>
+            </div>
+            <img src="@/public/narict logo.jpg" alt="Logo" class="h-16 w-16 rounded-full object-cover border-2 border-gray-200 shadow-md" />
+          </div>
+          <div class="bg-gray-50 px-6 py-3 border-t border-gray-200">
+            <div class="flex items-center text-gray-500">
+              <ClockIcon class="h-5 w-5 mr-2" />
+              <span>Last login: Today at 09:30 AM</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+          <div v-for="stat in stats" :key="stat.name" class="bg-white shadow-sm rounded-lg border border-gray-200 hover:shadow-md transition-shadow duration-300">
+            <div class="p-5">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <span class="inline-flex items-center justify-center h-12 w-12 rounded-md" :class="stat.bgColor">
+                    <component :is="stat.icon" class="h-6 w-6 text-white" aria-hidden="true" />
+                  </span>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">{{ stat.name }}</dt>
+                    <dd class="flex items-baseline">
+                      <div class="text-2xl font-semibold text-gray-900">{{ stat.name === 'Total Savings' ? '₦' : '' }} {{ stat.value.toLocaleString() }}</div>
+                      <!-- <div v-if="stat.change" :class="[stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600', 'ml-2 flex items-baseline text-sm font-semibold']">
+                        <ArrowUpIcon v-if="stat.changeType === 'increase'" class="self-center flex-shrink-0 h-4 w-4 text-green-500" aria-hidden="true" />
+                        <ArrowDownIcon v-else class="self-center flex-shrink-0 h-4 w-4 text-red-500" aria-hidden="true" />
+                        <span class="sr-only">{{ stat.changeType === 'increase' ? 'Increased' : 'Decreased' }} by</span>
+                        {{ stat.change }}
+                      </div> -->
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+            <div class="bg-gray-50 px-5 py-3 border-t border-gray-200">
+              <div class="text-sm">
+                <!-- <a href="#" class="font-medium text-emerald-600 hover:text-emerald-500 transition-colors duration-150">
+                  View details
+                </a> -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-8">
+          <!-- Recent Activity -->
+          <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+            <div class="px-6 py-5 border-b border-gray-200 bg-gray-50">
+              <div class="flex items-center justify-between">
+                <h2 class="text-lg font-medium text-gray-900">Recent Activity</h2>
+                <div class="flex space-x-2">
+                  <button class="p-1 rounded-full text-emerald-600 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-150">
+                    <!-- <RefreshIcon class="h-5 w-5" /> -->
+                  </button>
+                  <button class="p-1 rounded-full text-emerald-600 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-150">
+                    <EllipsisHorizontalIcon class="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="px-6 py-4">
+              <div class="flow-root">
+                <ul role="list" class="-my-5 divide-y divide-gray-200">
+                  <li v-for="activity in recentActivities" :key="activity.id" class="py-4 hover:bg-gray-50 rounded-md px-2 transition-colors duration-150">
+                    <div class="flex items-center space-x-4">
+                      <div class="flex-shrink-0">
+                        <span class="inline-flex items-center justify-center h-10 w-10 rounded-full shadow-sm" :class="activity.iconBackground">
+                          <component :is="activity.icon" class="h-5 w-5 text-white" aria-hidden="true" />
+                        </span>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 truncate">{{ activity.person }}</p>
+                        <p class="text-sm text-gray-500 truncate">{{ activity.description }}</p>
+                      </div>
+                      <div>
+                        <p class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{{ activity.date }}</p>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+              <div class="mt-6">
+                <a href="#" class="w-full flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-150">
+                  View all
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Savings Summary -->
+          <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+            <div class="px-6 py-5 border-b border-gray-200 bg-gray-50">
+              <h2 class="text-lg font-medium text-gray-900">Savings Summary</h2>
+            </div>
+            <div class="p-6">
+              <!-- <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div class="bg-white rounded-lg p-4 border border-gray-200">
+                  <h3 class="text-sm font-medium text-gray-700 mb-2">Total Deposits</h3>
+                  <p class="text-2xl font-bold text-gray-900">₦3,245,678</p>
+                  <div class="mt-2 flex items-center text-sm text-green-600">
+                    <ArrowUpIcon class="h-4 w-4 mr-1" />
+                    <span>12% from last month</span>
+                  </div>
+                </div>
+                <div class="bg-white rounded-lg p-4 border border-gray-200">
+                  <h3 class="text-sm font-medium text-gray-700 mb-2">Total Withdrawals</h3>
+                  <p class="text-2xl font-bold text-gray-900">₦1,567,890</p>
+                  <div class="mt-2 flex items-center text-sm text-red-600">
+                    <ArrowDownIcon class="h-4 w-4 mr-1" />
+                    <span>5% from last month</span>
+                  </div>
+                </div>
+              </div> -->
+              <div class="mt-6">
+                <h3 class="text-sm font-medium text-gray-700 mb-3">Savings Distribution</h3>
+                <div class="h-60">
+                  <div class="p-6">
+                    <div class="h-64">
+                      <Line :data="chartData" :options="chartOptions" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</template>
 
 <style scoped>
 .fade-enter-active,

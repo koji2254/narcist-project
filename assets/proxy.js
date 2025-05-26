@@ -1,0 +1,1 @@
+export const baseUrl = 'https://narict-app.vercel.app/api'

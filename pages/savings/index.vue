@@ -1,5 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-50">
+
+    <Spinner v-if="isLoading" />
     <!-- Page Header -->
     <header class="bg-white border-b border-gray-200 shadow-sm mb-8 p-6">
       <div class="max-w-7xl mx-auto">
@@ -220,6 +222,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">User Name</label>
                 <input
                   v-model="newSaving.userName"
+                  readonly
                   type="text"
                   class="focus:ring-emerald-500 focus:border-emerald-500 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                   placeholder="e.g., John Doe"
@@ -241,11 +244,11 @@
                   class="focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 rounded-md"
                 >
                   <option value="deposit">Deposit</option>
-                  <option value="withdrawal">Withdrawal</option>
+                  <option value="withdraw">Withdrawal</option>
                 </select>
               </div>
             </div>
-            <div class="mt-6 flex justify-end gap-3">
+            <div class="mt-6 flex justify-end gap-3"> 
               <button 
                 @click="closeNewSavingsModal" 
                 class="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
@@ -323,45 +326,33 @@
           </div>
         </div>
       </div>
+
+
+      <!--Alert  Modal -->
+      <AlertCard 
+        v-if="alertDetails !== null" 
+        :alertdetails="alertDetails" 
+        @close="alertDetails = null"
+      />
+
+
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { baseUrl } from '~/assets/proxy'
+import Spinner from '~/components/Spinner.vue'
+import axios from 'axios'
+import AlertCard from '~/components/AlertCard.vue'
 
 // State remains unchanged
 const searchQuery = ref('')
 const dateFilter = ref('all')
-const savings = ref([
-  {
-    id: '1',
-    userId: 'USR001',
-    userName: 'John Doe',
-    amount: 50000,
-    date: new Date(),
-    type: 'deposit',
-    balance: 150000
-  },
-  {
-    id: '2',
-    userId: 'USR002',
-    userName: 'Jane Smith',
-    amount: 25000,
-    date: new Date(Date.now() - 86400000),
-    type: 'deposit',
-    balance: 75000
-  },
-  {
-    id: '3',
-    userId: 'USR003',
-    userName: 'Mike Johnson',
-    amount: 10000,
-    date: new Date(),
-    type: 'withdrawal',
-    balance: 40000
-  }
-])
+const isLoading = ref(true)
+
+const savings = ref([])
 const showNewSavingsModal = ref(false)
 const showDetailsModal = ref(false)
 const selectedSaving = ref(null)
@@ -371,9 +362,46 @@ const newSaving = ref({
   amount: 0,
   type: 'deposit'
 })
+const user = ref(null)
+const showAlertModal = ref(false)
+const alertDetails = ref(null)
+
+const getUsersList = async () => {
+  isLoading.value = true
+  try {
+     const token = localStorage.getItem('auth_token')
+    const response = await axios.get(`${baseUrl}/auth/get-users-details`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    const users = response.data.users
+    // Flatten lastSavingTransaction into a savings history array
+    savings.value = users.flatMap(user =>
+    user.lastSavingTransaction.map(tx => ({
+      userName: user.fullName,
+      userId: user.ipssNumber.toString(),
+      amount: tx.amount,
+        date: tx.date,
+        type: tx.type,
+        balance: user.totalSaving,
+      }))
+    )
+    
+    // console.log(users)
+    console.log(response.data.users)
+  } catch (error) {
+    console.error('Error fetching savings history:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
 
 // Computed remains unchanged
 const filteredSavings = computed(() => {
+  if (!savings.value || savings.value.length === 0) return []
+
   return savings.value.filter(saving => {
     const matchesSearch = 
       saving.userName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
@@ -398,6 +426,52 @@ const filteredSavings = computed(() => {
   })
 })
 
+// Get the single User Info
+watch(() => newSaving.value.userId, async (val) => {
+  // Restrict input to 6 characters
+  if (val.length > 6) {
+    newSaving.value.userId = val.slice(0, 6)
+    return
+  }
+
+  // Make request when exactly 6 characters
+  if (val.length === 6) {
+    isLoading.value = true
+    try {
+      const token = localStorage.getItem('auth_token')
+      const response = await axios.get(`${baseUrl}/auth/user/search?ipssNumber=${val}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+      const user = response.data.user
+      user.value = response.data.user
+      newSaving.value.userName = user.value.fullName || '' // fallback in case fullName is undefined
+
+    } catch (error) {
+      console.error('User search failed:', error)
+      alertDetails.value = {type:'error', message:'User not found'}
+      showAlertModal.value = true
+      user.value = null
+
+      // reset the new savings state 
+      newSaving.value = { userId: '',
+        userName: '',
+        amount: 0,
+        type: 'deposit' 
+      }
+
+    } finally {
+       isLoading.value = false
+    }
+  }
+})
+
+onMounted(() => {
+  getUsersList()
+})
+
 // Methods remain unchanged
 const formatDate = (date) => {
   return new Date(date).toLocaleDateString('en-NG', {
@@ -416,31 +490,80 @@ const closeNewSavingsModal = () => {
   showNewSavingsModal.value = false
 }
 
-const saveNewSaving = () => {
+const saveNewSaving = async () => {
   if (!newSaving.value.userId || !newSaving.value.userName || newSaving.value.amount <= 0) {
     alert('Please fill all fields correctly')
     return
   }
 
-  const lastBalance = savings.value.length > 0 
-    ? savings.value[savings.value.length - 1].balance 
-    : 0
+  // const lastBalance = savings.value.length > 0 
+  //   ? savings.value[savings.value.length - 1].balance 
+  //   : 0
   
-  const newBalance = newSaving.value.type === 'deposit'
-    ? lastBalance + newSaving.value.amount
-    : lastBalance - newSaving.value.amount
+  // const newBalance = newSaving.value.type === 'deposit'
+  //   ? lastBalance + newSaving.value.amount
+  //   : lastBalance - newSaving.value.amount
 
-  savings.value.push({
-    id: String(savings.value.length + 1),
-    userId: newSaving.value.userId,
-    userName: newSaving.value.userName,
-    amount: newSaving.value.amount,
-    date: new Date(),
-    type: newSaving.value.type,
-    balance: newBalance
-  })
+  // savings.value.push({
+  //   id: String(savings.value.length + 1),
+  //   userId: newSaving.value.userId,
+  //   userName: newSaving.value.userName,
+  //   amount: newSaving.value.amount,
+  //   date: new Date(),
+  //   type: newSaving.value.type,
+  //   balance: newBalance
+  // })
   
-  showNewSavingsModal.value = false
+ 
+  
+  const depositData = {
+    ipssNumber: newSaving.value.userId,
+    amount: newSaving.value.amount,
+    type: newSaving.value.type
+  }
+
+  // return console.log(depositData)
+    try{
+      isLoading.value = true
+      const token = localStorage.getItem('auth_token')
+        const response = await axios.post(`${baseUrl}/saving/${depositData.type}`, depositData, {
+          headers: {
+              Authorization: `Bearer ${token}`,
+            },
+        })
+
+        // if(response.status === '')
+        const data = response.data
+        if(response.status >= 200 && response.status < 300){
+
+          const capitalizedType = depositData.type.charAt(0).toUpperCase() + depositData.type.slice(1);
+          
+            alertDetails.value = {
+              type: 'success',
+              message: `${capitalizedType} of ${depositData.amount.toLocaleString()} was Successful`
+            }
+        }
+
+    }
+    catch(error){
+      console.error('User search failed:', error)
+
+    }finally{
+      isLoading.value = false
+      showNewSavingsModal.value = false
+       getUsersList()
+    }
+    
+    
+}
+
+const popAlertModal = () => {
+  showAlertModal.value = true
+}
+
+const closeAlertModal = () => {
+  showAlertModal.value = false
+  alertDetails.value = null
 }
 
 const viewDetails = (saving) => {

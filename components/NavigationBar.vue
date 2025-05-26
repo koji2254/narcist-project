@@ -22,7 +22,7 @@
           </div>
           
           <!-- Desktop Navigation Links -->
-          <div class="hidden md:flex md:space-x-6">
+          <div v-if="role === 'admin'" class="hidden md:flex md:space-x-6">
             <NuxtLink 
               v-for="(item, index) in navItems" 
               :key="index"
@@ -41,7 +41,7 @@
         </div>
         
         <!-- Right Side Menu -->
-        <div class="flex items-center space-x-4">
+        <div v-if="role === 'admin'" class="flex items-center space-x-4">
           <!-- Notification Bell -->
           <button class="p-2 rounded-full text-gray-500 hover:text-emerald-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 relative">
             <span class="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
@@ -57,12 +57,12 @@
               class="flex items-center max-w-xs bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
             >
               <span class="sr-only">Open user menu</span>
-              <img 
-                class="h-8 w-8 rounded-full object-cover border border-gray-200" 
-                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" 
-                alt="User avatar"
-              />
-              <span class="ml-2 text-sm font-medium text-gray-700 hidden sm:block">Admin User</span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            </svg>
+
+              <span v-if="role === 'admin'"  class="ml-2 text-sm font-medium text-gray-700 hidden sm:block">Admin User</span>
+              <span v-if="role === 'user'"  class="ml-2 text-sm font-medium text-gray-700 hidden sm:block">User</span>
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 ml-1 hidden sm:block" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
               </svg>
@@ -83,7 +83,7 @@
               >
                 <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Your Profile</a>
                 <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
-                <a href="/login" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sign out</a>
+                <a @click="logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sign out</a>
               </div>
             </transition>
           </div>
@@ -156,13 +156,23 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { defineComponent, h } from 'vue'
+import { useRouter } from 'vue-router'
+import { defineComponent } from 'vue'
+import { role, loadRole } from '~/assets/useUserRole'
+  
+const router = useRouter()
 
 const route = useRoute()
 const isMobileMenuOpen = ref(false)
 const isUserMenuOpen = ref(false)
+const user = ref(null)
+console.log(role.value)
+
+onMounted(() => {
+  loadRole() // Load role AFTER page is mounted
+})
 
 // Toggle user menu and prevent event bubbling
 const toggleUserMenu = (event) => {
@@ -175,6 +185,13 @@ const closeUserMenu = (event) => {
   if (isUserMenuOpen.value && !event.target.closest('.relative')) {
     isUserMenuOpen.value = false
   }
+}
+
+const logout = () => {
+   // Simple logout: Navigate back to login page
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('user_info')
+    router.push('../')
 }
 
 if (process.client) {

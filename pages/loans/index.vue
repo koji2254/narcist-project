@@ -1,5 +1,6 @@
 <template>
   <div class="min-h-screen bg-gray-50">
+   <Spinner v-if="isLoading" />
     <!-- Page Header -->
     <header class="bg-white border-b border-gray-200 shadow-sm mb-8 p-6">
       <div class="max-w-7xl mx-auto">
@@ -47,7 +48,7 @@
               v-model="statusFilter" 
               class="focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 rounded-md"
             >
-              <option value="all">All Statuses</option>
+              <!-- <option value="all">All Statuses</option> -->
               <option value="pending">Pending</option>
               <option value="approved">Approved</option>
               <option value="rejected">Rejected</option>
@@ -86,12 +87,12 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="loan in filteredLoans" :key="loan.id" class="hover:bg-gray-50 transition-colors duration-150">
+            <tr v-for="loan in filteredLoans" :key="loan.ipssNumber" class="hover:bg-gray-50 transition-colors duration-150">
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                   <div>
                     <div class="text-sm font-medium text-gray-900">{{ loan.userName }}</div>
-                    <div class="text-sm text-gray-500">ID: {{ loan.userId }}</div>
+                    <div class="text-sm text-gray-500">ID: {{ loan.ipssNumber }}</div>
                   </div>
                 </div>
               </td>
@@ -133,10 +134,10 @@
                 </button>
                 <button
                   v-if="loan.status === 'approved'"
-                  @click="completeLoan(loan)"
+                  @click="makeLoanPayment(loan)"
                   class="text-emerald-600 hover:text-emerald-900 transition-colors duration-150"
                 >
-                  Complete
+                  Make Payment
                 </button>
               </td>
             </tr>
@@ -165,7 +166,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <h3 class="text-sm font-medium text-gray-900">{{ loan.userName }}</h3>
-                <p class="text-xs text-gray-500">ID: {{ loan.userId }}</p>
+                <p class="text-xs text-gray-500">IPSS: {{ loan.ipssNumber }}</p>
               </div>
               <span
                 class="px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full"
@@ -187,12 +188,12 @@
             </div>
             <div>
               <p class="text-xs font-medium text-gray-500">Duration</p>
-              <p class="text-sm font-semibold text-gray-900">{{ loan.duration }} months</p>
+              <p class="text-sm font-semibold text-gray-900">{{ loan.monthlyInstallment.length }} months</p>
             </div>
-            <div>
+            <!-- <div>
               <p class="text-xs font-medium text-gray-500">Next Payment</p>
               <p class="text-sm font-semibold text-gray-900">{{ formatDate(loan.nextPayment) }}</p>
-            </div>
+            </div> -->
           </div>
           <div class="px-4 py-3 bg-gray-50 flex justify-end space-x-3">
             <button
@@ -210,10 +211,10 @@
             </button>
             <button
               v-if="loan.status === 'approved'"
-              @click="completeLoan(loan)"
+              @click="makeLoanPayment(loan)"
               class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-emerald-700 bg-emerald-100 hover:bg-emerald-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-150"
             >
-              Complete
+             Make Payment
             </button>
           </div>
         </div>
@@ -241,9 +242,9 @@
             <h3 class="text-lg font-medium text-gray-900 mb-5">New Loan Request</h3>
             <div class="mt-2 space-y-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">User ID</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">ipssNumber</label>
                 <input
-                  v-model="newLoan.userId"
+                  v-model="newLoan.ipssNumber"
                   type="text"
                   class="focus:ring-emerald-500 focus:border-emerald-500 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                   placeholder="e.g., USR001"
@@ -253,6 +254,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">User Name</label>
                 <input
                   v-model="newLoan.userName"
+                  readonly
                   type="text"
                   class="focus:ring-emerald-500 focus:border-emerald-500 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                   placeholder="e.g., John Doe"
@@ -285,7 +287,7 @@
                 Cancel
               </button>
               <button 
-                @click="saveNewLoan" 
+                @click="getLoanTerm" 
                 class="px-4 py-2 bg-emerald-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
               >
                 Submit
@@ -316,7 +318,7 @@
                 </div>
                 <div>
                   <p class="text-xs font-medium text-gray-500 mb-1">ID</p>
-                  <p class="text-sm font-semibold text-gray-900">{{ selectedLoan.userId }}</p>
+                  <p class="text-sm font-semibold text-gray-900">{{ selectedLoan.ipssNumber }}</p>
                 </div>
                 <div>
                   <p class="text-xs font-medium text-gray-500 mb-1">Amount</p>
@@ -373,14 +375,15 @@
             <h3 class="text-lg font-medium text-gray-900 mb-5">Process Loan</h3>
             <div class="mt-2 space-y-4">
               <p class="text-sm text-gray-700">Loan for {{ processingLoan.userName }} (₦{{ processingLoan.amount.toLocaleString() }})</p>
+              <p class="bg">Amount to be paid upfront ₦{{ processingLoan.totalInterestAmount.toLocaleString() }}</p>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Action</label>
                 <select 
                   v-model="processAction" 
                   class="focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 rounded-md"
                 >
-                  <option value="approve">Approve</option>
-                  <option value="reject">Reject</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Reject</option>
                 </select>
               </div>
             </div>
@@ -402,8 +405,8 @@
         </div>
       </div>
 
-      <!-- Complete Loan Modal -->
-      <div v-if="showCompleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+      <!-- Make a LOAN PAYMENT -->
+      <div v-if="loanPaymentModal" class="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
         <div class="relative mx-auto p-6 border w-full max-w-md shadow-xl rounded-lg bg-white">
           <button 
             @click="closeCompleteModal" 
@@ -414,12 +417,41 @@
             </svg>
           </button>
           <div class="mt-3">
-            <h3 class="text-lg font-medium text-gray-900 mb-5">Mark Loan as Completed</h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-5">Make Loan Payment</h3>
             <div class="mt-2">
               <p class="text-sm text-gray-700 mb-4">
                 Confirm completion of loan for {{ completingLoan.userName }} 
                 (₦{{ completingLoan.amount.toLocaleString() }})
               </p>
+            </div>
+            <div class="border p-2 rounded max-h-[300px] overflow-scroll">
+              <h2>Installments</h2>
+
+                <div 
+                  class="bg-white my-1 p-1 border-t border-l-gray-300 text-sm" 
+                  v-for="install in completingLoan.installments" 
+                  :key="install.amount"
+                >
+                  <p>Amount: ₦{{ install.amount.toLocaleString() }}</p>
+                  <p>Month: {{ install.month }}</p>
+                  <p>
+                     Paid: 
+                      <span :class="install.paid ? 'bg-emerald-600' : 'bg-red-700'" class="px-1 text-gray-200 rounded ">
+                        {{ install.paid }}
+                      </span>
+                  </p>
+                </div>
+            </div>
+            <div class="mt-3">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Amount (₦)</label>
+                <input
+                  v-model="loanPaymentForm.amount"
+                  type="number"
+                  class="focus:ring-emerald-500 focus:border-emerald-500 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+                  placeholder=""
+                />
+              </div>
             </div>
             <div class="mt-6 flex justify-end gap-3">
               <button 
@@ -432,81 +464,185 @@
                 @click="confirmCompleteLoan" 
                 class="px-4 py-2 bg-emerald-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
               >
+                Confirm Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SHOW UI FOR THE LOAN TERM -->
+      <div v-if="showLaonTermModal" class="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+        <div class="relative mx-auto p-6 border w-full max-w-md shadow-xl rounded-lg bg-white">
+           <button 
+            @click="closeLoanTermModal" 
+            class="absolute top-4 right-4 text-gray-400 hover:text-gray-500"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+            <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-5">Loan Term Properties</h3>
+            <div class="mt-2 space-y-4">
+              <div class="flex gap-1 text-xl items-center py-1 justify-between border-t border-gray-300">
+                <label class="text-md text-gray-700">Amount</label>
+                <p class="text-semibold text-lg text-gray-800">₦{{ loanTerm && loanTerm.repaymentAmount.toLocaleString() }}</p>
+              </div>
+              <div class="flex gap-1 items-center text-lg justify-between border-t border-gray-300">
+                <label class="flex text-gray-700">Interest Rate</label>
+                <p class="text-semibold text-gray-800">{{ loanTerm && loanTerm.totalInterest }} %</p>
+              </div>
+              <div class="flex gap-1 items-center text-lg justify-between border-t border-gray-300">
+                <label class="text-gray-700">Interest Amount</label>
+                <p class="text-semibold text-gray-800">₦{{ loanTerm &&loanTerm.interestAmount.toLocaleString() }}</p>
+              </div>
+              <div class="flex gap-1 items-center text-lg justify-between border-t border-gray-300">
+                <label class="flex text-gray-700">Transaction Fee</label>
+                <p class="text-semibold text-gray-800">₦300</p>
+              </div>
+              <!-- <div class="flex gap-1 items-center text-lg justify-between border-t border-gray-300">
+                <label class="text-gray-700">Repayment Amount</label>
+                <p class="text-semibold text-gray-800">₦{{  loanTerm && loanTerm.totalInterestAmount.toLocaleString() }}</p>
+              </div> -->
+              <div class="flex font-semibold gap-1 items-center text-lg justify-between border-t border-gray-300">
+                <label class="text-gray-700 ">Total Interest Amount</label>
+                <p class="text-semibold text-gray-800">₦{{ loanTerm && loanTerm.totalInterestAmount.toLocaleString() }}</p>
+              </div>
+              
+              <div v-if="loanTerm">
+              <div class="bg-gray100 p-2 border rounded max-h-[200px] overflow-scroll">
+                <h3 class="text-lg font-medium text-gray-900 mb-5">Installments</h3>
+                
+                <div 
+                  class="bg-white my-1 p-1 border-t border-l-gray-300 text-sm" 
+                  v-for="install in loanTerm.installments" 
+                  :key="install.amount"
+                >
+                  <p>Amount: ₦{{ install.amount.toLocaleString() }}</p>
+                  <p>Month: {{ install.month }}</p>
+                  <p>Paid: {{ install.paid }}</p>
+                </div>
+              </div>
+            </div>
+
+            </div>
+            <div class="mt-6 flex justify-end gap-3">
+              <button 
+                @click="closeLoanTermModal" 
+                class="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+              >
+                Cancel
+              </button>
+              <button 
+                @click="saveLoanInfo" 
+                class="px-4 py-2 bg-emerald-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+              >
                 Confirm
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      <!--Alert  Modal -->
+      <AlertCard 
+        v-if="alertDetails !== null" 
+        :alertdetails="alertDetails" 
+        @close="alertDetails = null"
+      />
+
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import axios from 'axios'
+import { baseUrl } from '~/assets/proxy'
+import Spinner from '~/components/Spinner.vue'
+import AlertCard from '~/components/AlertCard.vue'
 
 // State remains unchanged
 const searchQuery = ref('')
-const statusFilter = ref('all')
+const statusFilter = ref('pending')
+const isLoading = ref(true)
 const loans = ref([
-  {
-    id: '1',
-    userId: 'USR001',
-    userName: 'John Doe',
-    amount: 100000,
-    duration: 6,
-    status: 'pending',
-    nextPayment: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-  },
-  {
-    id: '2',
-    userId: 'USR002',
-    userName: 'Jane Smith',
-    amount: 250000,
-    duration: 12,
-    status: 'approved',
-    nextPayment: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
-  },
-  {
-    id: '3',
-    userId: 'USR003',
-    userName: 'Mike Johnson',
-    amount: 50000,
-    duration: 3,
-    status: 'rejected',
-    nextPayment: new Date()
-  },
-  {
-    id: '4',
-    userId: 'USR004',
-    userName: 'Sarah Brown',
-    amount: 150000,
-    duration: 9,
-    status: 'completed',
-    nextPayment: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
-  }
+  // {
+  //   id: '2',
+  //   ipssNumber: 'USR002',
+  //   userName: 'Jane Smith',
+  //   amount: 250000,
+  //   duration: 12,
+  //   status: 'approvedd',
+  //   nextPayment: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
+  // }
 ])
 const showNewLoanModal = ref(false)
 const showDetailsModal = ref(false)
 const showProcessModal = ref(false)
-const showCompleteModal = ref(false)
+const loanPaymentModal = ref(false)
+const showLaonTermModal = ref(false)
 const selectedLoan = ref(null)
-const processingLoan = ref(null)
-const completingLoan = ref(null)
-const processAction = ref('approve')
+const processingLoan = ref({})
+const completingLoan = ref({})
+const loanPaymentForm = ref({
+  ipssNumber: '',
+  amount: ''
+})
+const processAction = ref('approved')
 const newLoan = ref({
-  userId: '',
+  ipssNumber: '',
   userName: '',
   amount: 0,
   duration: 0
+})
+const user = ref(null)
+const loanTerm = ref(null)
+const alertDetails = ref(null)
+
+
+const getAlLoans = async () => {
+  isLoading.value = true
+  try {
+
+    const stats = {
+      status: statusFilter.value,
+    }
+
+    const token = localStorage.getItem('auth_token')
+    const response = await axios.post(`${baseUrl}/loan/get-loans-by-status`, stats,{
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    const fetchedLoans = response.data.Loans
+    loans.value = fetchedLoans  // ✅ safe assignment
+
+    console.log(fetchedLoans)   // ✅ safe to log
+  } catch (error) {
+    console.error('Error fetching savings history:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+watch(statusFilter, (newStatus) => {
+  console.log('Status changed to:', newStatus)
+  getAlLoans() // your function to fetch data based on status
+})
+
+onMounted(() => {
+  getAlLoans()
 })
 
 // Computed remains unchanged
 const filteredLoans = computed(() => {
   return loans.value.filter(loan => {
     const matchesSearch = 
-      loan.userName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      loan.userId.toLowerCase().includes(searchQuery.value.toLowerCase())
+      loan.fullName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      loan.ipssNumber.toLowerCase().includes(searchQuery.value.toLowerCase())
     
     if (!matchesSearch) return false
     
@@ -528,7 +664,7 @@ const formatDate = (date) => {
 }
 
 const openNewLoanModal = () => {
-  newLoan.value = { userId: '', userName: '', amount: 0, duration: 0 }
+  newLoan.value = { ipssNumber: '', userName: '', amount: 0, duration: 0 }
   showNewLoanModal.value = true
 }
 
@@ -536,23 +672,122 @@ const closeNewLoanModal = () => {
   showNewLoanModal.value = false
 }
 
-const saveNewLoan = () => {
-  if (!newLoan.value.userId || !newLoan.value.userName || newLoan.value.amount <= 0 || newLoan.value.duration <= 0) {
+const closeLoanTermModal = () => {
+  showLaonTermModal.value = false
+}
+
+watch(() => newLoan.value.ipssNumber, async (val) => {
+  // Restrict input to 6 characters
+  if (val.length > 6) {
+    newLoan.value.ipssNumber = val.slice(0, 6)
+    return
+  }
+
+  // Make request when exactly 6 characters
+  if (val.length === 6) {
+    isLoading.value = true
+    try {
+      const token = localStorage.getItem('auth_token')
+      const response = await axios.get(`${baseUrl}/auth/user/search?ipssNumber=${val}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+      const user = response.data.user
+      user.value = response.data.user
+      newLoan.value.userName = user.value.fullName || '' // fallback in case fullName is undefined
+
+    } catch (error) {
+      console.error('User search failed:', error)
+      alertDetails.value = {type:'error', message:'User not found'}
+      showAlertModal.value = true
+      user.value = null
+    } finally {
+       isLoading.value = false
+    }
+  }
+})
+
+const getLoanTerm = async () => {
+    if (!newLoan.value.ipssNumber || !newLoan.value.userName || newLoan.value.amount <= 0 || newLoan.value.duration <= 0) {
     alert('Please fill all fields correctly')
     return
   }
 
-  loans.value.push({
-    id: String(loans.value.length + 1),
-    userId: newLoan.value.userId,
-    userName: newLoan.value.userName,
+  const loanEnq = {
+    ipssNumber: newLoan.value.ipssNumber,
     amount: newLoan.value.amount,
-    duration: newLoan.value.duration,
-    status: 'pending',
-    nextPayment: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-  })
+    term_month : newLoan.value.duration
+  }
+
+  isLoading.value = true
+  try {
+    
+    const token = localStorage.getItem('auth_token')
+    const response = await axios.post(`${baseUrl}/loan/loan-terms`, loanEnq, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    loanTerm.value = response.data.loanTerms
+
+    console.log(response.data.loanTerms)
+
+  } catch (error) {
+    console.error('User search failed:', error.response.data.error)
+
+    if(error.response.data.error){
+      alert(error.response.data.error)
+
+      showLaonTermModal.value = false
+    }
+
+
+  }finally {
+    isLoading.value = false
+  }
+
   
   showNewLoanModal.value = false
+  showLaonTermModal.value = true
+}
+
+const saveLoanInfo = async () => {
+
+  isLoading.value = true
+  const loanMain = {
+      ...newLoan.value,
+      term_month: newLoan.value.duration
+    }
+
+  try {
+    const token = localStorage.getItem('auth_token')
+    const response = await axios.post(`${baseUrl}/loan/create-loan`,loanMain ,{
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    if(response.status >= 200 && response.status < 300){
+      // alert(`Loan of ${loanMain.amount} was Successfull`)
+      isLoading.value = false
+      alertDetails.value = { type:'success', message:`Loan of ${loanMain.amount.toLocaleString()} was Successfull` }
+      // get all the loans || it should be with the state manager
+      getAlLoans()
+      
+      showLaonTermModal.value = false
+    }
+    
+
+  
+  } catch (error) {
+    console.log(error)    
+  }finally {
+    isLoading.value = false
+  }
+
 }
 
 const viewLoanDetails = (loan) => {
@@ -566,8 +801,14 @@ const closeDetailsModal = () => {
 }
 
 const processLoan = (loan) => {
-  processingLoan.value = loan
-  processAction.value = 'approve'
+  processingLoan.value = {
+    amount: loan.amount,
+    ipssNumber: loan.ipssNumber,
+    userName: loan.fullName,
+    totalInterestAmount: loan.totalInterestAmount
+  }
+
+  processAction.value = 'approved'
   showProcessModal.value = true
 }
 
@@ -576,38 +817,134 @@ const closeProcessModal = () => {
   processingLoan.value = null
 }
 
-const confirmProcessLoan = () => {
-  const loanIndex = loans.value.findIndex(l => l.id === processingLoan.value.id)
-  if (loanIndex !== -1) {
-    if (processAction.value === 'approve') {
-      loans.value[loanIndex].status = 'approved'
-    } else if (processAction.value === 'reject') {
-      loans.value[loanIndex].status = 'rejected'
+const confirmProcessLoan = async () => {
+  
+  isLoading.value = true
+  const statusInfo = {
+      status: processAction.value,
+      ipssNumber: processingLoan.value.ipssNumber
     }
+
+  try {
+    const token = localStorage.getItem('auth_token')
+    const response = await axios.patch(`${baseUrl}/loan/update-status`,statusInfo ,{
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    if(response.status >= 200 && response.status < 300){
+      alertDetails.value = { type:'success', message:`Loan ${processingLoan.value.amount.toLocaleString()} ${statusInfo.status}`}
+      
+      // get all the loans || it should be with the state manager
+      getAlLoans()
+      
+      showLaonTermModal.value = false
+    }
+    
+
+  
+  } catch (error) {
+    console.log(error)  
+    alertDetails.value = { type:'error', message: `${error.response.data.error || error.response.data.message}` }  
+  }finally {
+    isLoading.value = false
   }
+
+
   showProcessModal.value = false
   processingLoan.value = null
 }
 
-const completeLoan = (loan) => {
-  completingLoan.value = loan
-  showCompleteModal.value = true
+const makeLoanPayment = (loan) => {
+  completingLoan.value = {
+    amount: loan.amount,
+    ipssNumber: loan.ipssNumber,
+    userName: loan.fullName,
+    installments: loan.monthlyInstallment
+  }
+
+  loanPaymentForm.value = {
+    ipssNumber: loan.ipssNumber,
+    amount: ''
+  }
+
+  loanPaymentModal.value = true
 }
 
 const closeCompleteModal = () => {
-  showCompleteModal.value = false
+   loanPaymentForm.value = {
+    ipssNumber: '',
+    amount: ''
+  }
+
+  loanPaymentModal.value = false
   completingLoan.value = null
 }
 
-const confirmCompleteLoan = () => {
-  const loanIndex = loans.value.findIndex(l => l.id === completingLoan.value.id)
-  if (loanIndex !== -1) {
-    loans.value[loanIndex].status = 'completed'
-    loans.value[loanIndex].nextPayment = new Date()
+
+
+// confirmCompleteLoan = async () => {
+const confirmCompleteLoan = async () => {
+
+  if(loanPaymentForm.value.amount === 0 || loanPaymentForm.value.amount === ''){
+
+    return alertDetails.value = {type:'error', message:'Input a valid amount'}
   }
-  showCompleteModal.value = false
-  completingLoan.value = null
+
+  console.log(loanPaymentForm)
+  
+  isLoading.value = true
+  const dataInfo = {
+      amount: loanPaymentForm.value.amount,
+      ipssNumber: loanPaymentForm.value.ipssNumber
+    }
+
+  try {
+    const token = localStorage.getItem('auth_token')
+    const response = await axios.post(`${baseUrl}/loan/make-payment`,dataInfo ,{
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    if(response.status >= 200 && response.status < 300){
+      alertDetails.value = {type:'success', message: `Payment of ${dataInfo.amount.toLocaleString()} is successfull`}
+      
+      // get all the loans || it should be with the state manager
+      
+      
+
+      loanPaymentModal.value = false
+      completingLoan.value = null
+
+      loanPaymentForm.value = {
+        ipssNumber: '',
+        amount: ''
+      }
+      
+      getAlLoans()
+     
+    }
+      
+  } catch (error) {
+    console.log(error)  
+
+    alertDetails.value = {type:'error', message: `${error.response.data.error || error.response.data.message}`}
+  }finally {
+     getAlLoans()
+    isLoading.value = false
+
+
+  }
+
+
+
+
 }
+
+
+
 </script>
 
 <style scoped>

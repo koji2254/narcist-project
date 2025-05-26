@@ -1,5 +1,6 @@
 <template>
   <div class="min-h-screen bg-gray-50">
+   <Spinner v-if="isLoading" />
     <!-- Page Header -->
     <header class="bg-white border-b border-gray-200 shadow-sm mb-8 p-6">
       <div class="max-w-7xl mx-auto">
@@ -200,19 +201,13 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="user in filteredUsers" :key="user.id" class="hover:bg-gray-50 transition-colors duration-150">
+            <tr v-for="user in filteredUsers" :key="user.ipssNumber" class="hover:bg-gray-50 transition-colors duration-150">
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                   <div class="h-10 w-10 flex-shrink-0">
-                    <img
-                      class="h-10 w-10 rounded-full object-cover border border-gray-200"
-                      :src="user.avatar"
-                      alt=""
-                    />
                   </div>
                   <div class="ml-4">
-                    <div class="text-sm font-medium text-gray-900">{{ user.name }}</div>
-                    <div class="text-sm text-gray-500">{{ user.email }}</div>
+                    <div class="text-sm font-medium text-gray-900">{{ user.fullName }}</div>
                   </div>
                 </div>
               </td>
@@ -228,7 +223,7 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                ₦{{ formatCurrency(user.totalSavings) }}
+                ₦{{ users && formatCurrency(user.totalSaving) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
@@ -291,14 +286,8 @@
         >
           <div class="p-4 border-b border-gray-200 flex items-center justify-between">
             <div class="flex items-center">
-              <img 
-                :src="user.avatar" 
-                alt="" 
-                class="h-10 w-10 rounded-full object-cover border border-gray-200"
-              />
-              <div class="ml-3">
-                <h3 class="text-sm font-medium text-gray-900">{{ user.name }}</h3>
-                <p class="text-xs text-gray-500">{{ user.email }}</p>
+              <div class="ml-0">
+                <h3 class="text-sm font-medium text-gray-900">{{ user.fullName }}</h3>
               </div>
             </div>
             <div class="flex space-x-2">
@@ -315,7 +304,8 @@
                 class="px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full"
                 :class="{
                   'bg-purple-100 text-purple-800': user.role === 'admin',
-                  'bg-emerald-100 text-emerald-800': user.role === 'worker'
+                  'bg-emerald-100 text-emerald-800': user.role === 'worker',
+                  'bg-emerald-100 text-emerald-950': user.role === 'user'
                 }"
               >
                 {{ user.role }}
@@ -325,7 +315,7 @@
           <div class="p-4 grid grid-cols-2 gap-4">
             <div>
               <p class="text-xs font-medium text-gray-500">Total Savings</p>
-              <p class="text-sm font-semibold text-gray-900">₦{{ formatCurrency(user.totalSavings) }}</p>
+              <p class="text-sm font-semibold text-gray-900">₦{{ users && formatCurrency(user.totalSaving) }}</p>
             </div>
             <div>
               <p class="text-xs font-medium text-gray-500">Active Loans</p>
@@ -428,7 +418,7 @@
           <h3 class="text-lg font-medium text-gray-900 mb-5">{{ selectedUser ? 'Edit User' : 'Add New User' }}</h3>
           <div class="mt-2 space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">ID</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">IPSS Number</label>
               <input
                 v-model="formUser.id"
                 type="text"
@@ -447,12 +437,12 @@
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
               <input
-                v-model="formUser.email"
-                type="email"
+                v-model="formUser.phone"
+                type="phone"
                 class="focus:ring-emerald-500 focus:border-emerald-500 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
-                placeholder="e.g., john@example.com"
+                placeholder="+234 90905904"
               />
             </div>
           </div>
@@ -487,22 +477,16 @@
         </button>
         <div class="mt-3">
           <div class="flex items-center mb-6">
-            <img 
-              :src="selectedUser?.avatar" 
-              alt="User Avatar" 
-              class="h-16 w-16 rounded-full object-cover border-2 border-emerald-500 mr-4" 
-            />
             <div>
-              <h3 class="text-xl font-bold text-gray-900">{{ selectedUser?.name }}</h3>
-              <p class="text-sm text-gray-500">{{ selectedUser?.email }}</p>
+              <h3 class="text-xl font-bold text-gray-900">{{ selectedUser?.fullName }}</h3>
             </div>
           </div>
           
           <div class="bg-gray-50 rounded-lg p-4 mb-6">
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <p class="text-xs font-medium text-gray-500 mb-1">ID</p>
-                <p class="text-sm font-semibold text-gray-900">{{ selectedUser?.id }}</p>
+                <p class="text-xs font-medium text-gray-500 mb-1">IPSS No.</p>
+                <p class="text-sm font-semibold text-gray-900">{{ selectedUser?.ipssNumber }}</p>
               </div>
               <div>
                 <p class="text-xs font-medium text-gray-500 mb-1">Role</p>
@@ -510,7 +494,8 @@
                   class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full"
                   :class="{
                     'bg-purple-100 text-purple-800': selectedUser?.role === 'admin',
-                    'bg-emerald-100 text-emerald-800': selectedUser?.role === 'worker'
+                    'bg-emerald-100 text-emerald-800': selectedUser?.role === 'worker',
+                    'bg-emerald-100 text-emerald-800': selectedUser?.role === 'user'
                   }"
                 >
                   {{ selectedUser?.role }}
@@ -540,7 +525,7 @@
             <div class="bg-gray-50 rounded-lg p-4 grid grid-cols-2 gap-4">
               <div>
                 <p class="text-xs font-medium text-gray-500 mb-1">Total Savings</p>
-                <p class="text-lg font-bold text-emerald-600">₦{{ formatCurrency(selectedUser?.totalSavings) }}</p>
+                <p class="text-lg font-bold text-emerald-600">₦{{ users && formatCurrency(selectedUser?.totalSaving) }}</p>
               </div>
               <div>
                 <p class="text-xs font-medium text-gray-500 mb-1">Active Loans</p>
@@ -569,11 +554,28 @@
         </div>
       </div>
     </div>
+
+      <!--Alert  Modal -->
+      <AlertCard 
+        v-if="alertDetails !== null" 
+        :alertdetails="alertDetails" 
+        @close="alertDetails = null"
+      />
+
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import axios from 'axios'
+import { baseUrl } from '~/assets/proxy'
+import Spinner from '~/components/Spinner.vue'
+import AlertCard from '~/components/AlertCard.vue'
+
+const users = ref([])
+const isLoading = ref(false)
+const alertDetails = ref(null)
 
 // Mock Savings data (from your Savings page)
 const savingsData = ref([
@@ -646,48 +648,75 @@ const loansData = ref([
   }
 ])
 
-// Aggregate users from Savings and Loans
-const users = computed(() => {
-  const userMap = new Map()
 
-  savingsData.value.forEach(saving => {
-    if (!userMap.has(saving.userId)) {
-      userMap.set(saving.userId, {
-        id: saving.userId,
-        name: saving.userName,
-        email: `${saving.userName.toLowerCase().replace(' ', '.')}@example.com`,
-        role: saving.userId === 'USR002' ? 'admin' : 'worker',
-        totalSavings: 0,
-        activeLoans: 0,
-        status: 'active',
-        avatar: `https://images.unsplash.com/photo-${saving.userId === 'USR001' ? '1472099645785-5658abf4ff4e' : saving.userId === 'USR002' ? '1494790108377-be9c29b29330' : saving.userId === 'USR003' ? '1519345182560-3f2917c472ef' : '1517364891578-8e8b9f5b8e8b'}?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80`
-      })
-    }
-    const user = userMap.get(saving.userId)
-    user.totalSavings = saving.balance
-  })
+// Get Users Details get-users-details
+const getUsersDetails = async () => {
+  isLoading.value = true
+  try {
+    const token = localStorage.getItem('auth_token')
+    const response = await axios.get(`${baseUrl}/auth/get-users-details`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
 
-  loansData.value.forEach(loan => {
-    if (!userMap.has(loan.userId)) {
-      userMap.set(loan.userId, {
-        id: loan.userId,
-        name: loan.userName,
-        email: `${loan.userName.toLowerCase().replace(' ', '.')}@example.com`,
-        role: loan.userId === 'USR002' ? 'admin' : 'worker',
-        totalSavings: 0,
-        activeLoans: 0,
-        status: 'active',
-        avatar: `https://images.unsplash.com/photo-${loan.userId === 'USR001' ? '1472099645785-5658abf4ff4e' : loan.userId === 'USR002' ? '1494790108377-be9c29b29330' : loan.userId === 'USR003' ? '1519345182560-3f2917c472ef' : '1517364891578-8e8b9f5b8e8b'}?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80`
-      })
-    }
-    const user = userMap.get(loan.userId)
-    if (loan.status === 'approved' || loan.status === 'pending') {
-      user.activeLoans += 1
-    }
-  })
+    users.value = response.data.users
 
-  return Array.from(userMap.values())
+  
+  } catch (error) {
+    console.error('Error fetching data:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  getUsersDetails()
 })
+
+
+// Aggregate users from Savings and Loans
+// const users = computed(() => {
+//   const userMap = new Map()
+
+//   savingsData.value.forEach(saving => {
+//     if (!userMap.has(saving.userId)) {
+//       userMap.set(saving.userId, {
+//         id: saving.userId,
+//         name: saving.userName,
+//         email: `${saving.userName.toLowerCase().replace(' ', '.')}@example.com`,
+//         role: saving.userId === 'USR002' ? 'admin' : 'worker',
+//         totalSaving: 0,
+//         activeLoans: 0,
+//         status: 'active',
+//         avatar: `https://images.unsplash.com/photo-${saving.userId === 'USR001' ? '1472099645785-5658abf4ff4e' : saving.userId === 'USR002' ? '1494790108377-be9c29b29330' : saving.userId === 'USR003' ? '1519345182560-3f2917c472ef' : '1517364891578-8e8b9f5b8e8b'}?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80`
+//       })
+//     }
+//     const user = userMap.get(saving.userId)
+//     user.totalSaving = saving.balance
+//   })
+
+//   loansData.value.forEach(loan => {
+//     if (!userMap.has(loan.userId)) {
+//       userMap.set(loan.userId, {
+//         id: loan.userId,
+//         name: loan.userName,
+//         email: `${loan.userName.toLowerCase().replace(' ', '.')}@example.com`,
+//         role: loan.userId === 'USR002' ? 'admin' : 'worker',
+//         totalSaving: 0,
+//         activeLoans: 0,
+//         status: 'active',
+//         avatar: `https://images.unsplash.com/photo-${loan.userId === 'USR001' ? '1472099645785-5658abf4ff4e' : loan.userId === 'USR002' ? '1494790108377-be9c29b29330' : loan.userId === 'USR003' ? '1519345182560-3f2917c472ef' : '1517364891578-8e8b9f5b8e8b'}?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80`
+//       })
+//     }
+//     const user = userMap.get(loan.userId)
+//     if (loan.status === 'approved' || loan.status === 'pending') {
+//       user.activeLoans += 1
+//     }
+//   })
+
+//   return Array.from(userMap.values())
+// })
 
 // State
 const searchQuery = ref('')
@@ -699,9 +728,9 @@ const selectedUser = ref(null)
 const formUser = ref({
   id: '',
   name: '',
-  email: '',
+  phone: '',
   role: 'worker',
-  totalSavings: 0,
+  totalSaving: 0,
   activeLoans: 0,
   status: 'active',
   avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
@@ -711,9 +740,8 @@ const formUser = ref({
 const filteredUsers = computed(() => {
   return users.value.filter(user => {
     const matchesSearch = 
-      user.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      user.id.toLowerCase().includes(searchQuery.value.toLowerCase())
+      user.fullName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      user.ipssNumber.toString().includes(searchQuery.value)
     
     if (!matchesSearch) return false
     
@@ -748,9 +776,8 @@ const openNewUserModal = () => {
   formUser.value = {
     id: '',
     name: '',
-    email: '',
     role: 'worker',
-    totalSavings: 0,
+    totalSaving: 0,
     activeLoans: 0,
     status: 'active',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
@@ -765,6 +792,7 @@ const closeUserModal = () => {
 
 const viewUserDetails = (user) => {
   selectedUser.value = user
+  console.log(user)
   showDetailsModal.value = true
 }
 
@@ -779,9 +807,9 @@ const editUser = (user) => {
   isUserModalOpen.value = true
 }
 
-const handleUserSubmit = () => {
-  if (!formUser.value.id || !formUser.value.name || !formUser.value.email) {
-    alert('Please fill in ID, name, and email')
+const handleUserSubmit = async () => {
+  if (!formUser.value.id || !formUser.value.name) {
+    alert('Please fill in ID, name')
     return
   }
 
@@ -791,30 +819,46 @@ const handleUserSubmit = () => {
   }
 
   const newUser = {
-    id: formUser.value.id,
-    name: formUser.value.name,
-    email: formUser.value.email,
-    role: formUser.value.role,
-    totalSavings: formUser.value.totalSavings || 0,
-    activeLoans: formUser.value.activeLoans || 0,
-    status: formUser.value.status,
-    avatar: formUser.value.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
+    fullName: formUser.value.name,
+    ipssNumber: formUser.value.id,
+    phoneNumber: formUser.value.phone,
   }
 
-  if (selectedUser.value) {
-    alert('Editing existing users only updates display data. Savings and Loans data remain unchanged in this mock.')
-    closeUserModal()
-    return
-  } else {
-    savingsData.value.push({
-      id: String(savingsData.value.length + 1),
-      userId: newUser.id,
-      userName: newUser.name,
-      amount: 0,
-      date: new Date(),
-      type: 'deposit',
-      balance: 0
+  // if (selectedUser.value) {
+  //   alert('Editing existing users only updates display data. Savings and Loans data remain unchanged in this mock.')
+  //   closeUserModal()
+  //   return
+  // } else {
+  //   savingsData.value.push({
+  //     id: String(savingsData.value.length + 1),
+  //     userId: newUser.id,
+  //     userName: newUser.name,
+  //     amount: 0,
+  //     date: new Date(),
+  //     type: 'deposit',
+  //     balance: 0
+  //   })
+  // }
+
+
+  isLoading.value = true
+  try {
+    const token = localStorage.getItem('auth_token')
+    const response = await axios.post(`${baseUrl}/auth/register`, newUser,{
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     })
+
+    console.log(response.data)
+    alertDetails.value = {type:'success', message:`User ${newUser.fullName} created successfully`}
+    getUsersDetails()
+  } catch (error) {
+    
+    console.log(error)
+    alertDetails.value = {type:'error', message:`${error.response.data.error}`}
+  }finally{
+    isLoading.value = false
   }
   
   closeUserModal()
