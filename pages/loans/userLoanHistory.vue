@@ -8,7 +8,7 @@
         </h1>
         <div class="flex items-start justify-between">
         <div class="font-light flex items-center">
-         <h2 class="font-semibold p-2 my-2">$6,000</h2>
+         <h2 v-if="userStats" class="font-semibold p-2 my-2">₦{{ formatCurrency(userStats.approvedLoanBalance) }}</h2>
         </div>
           <h2 class="p-2 my- flex items-center gap-1">
            <!-- <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Zm40-308 198-252H282l198 252Zm0 0Z"/></svg> sort -->
@@ -18,11 +18,8 @@
   
       <div class="bg-white rounded-lg">
         
-        <div class="space-y-1">
+        <!-- <div class="space-y-1">
            <div v-if="userStats">
-          
-            <!--  -->
-               <!--  -->
             <div class="bg-gray-50 shadow mb-2">
               <h3 class="text-md flex items-center p-2 py-1">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#8B1A10" class="size-6">
@@ -38,12 +35,12 @@
                 <div class="font-semibold">17/17/2025 2:45 AM</div>
               </div>
             </div>
-            <!--  -->
+
           </div>
           <div v-else>
             <p>Loading user stats...</p>
           </div>
-        </div>
+        </div> -->
       </div>
 
     </div>
@@ -93,28 +90,6 @@ const getUserDash = async () => {
 }
 
 
-const getActiveLoan = async () => {
-    isLoading.value = true
-  try {
-     const token = localStorage.getItem('auth_token')
-    const response = await axios.get(`${baseUrl}/loan/get-active-loan`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-    
-    // console.log(user)
-    activeLoan.value = response.data
-    
-    console.log(response.data)
-
-  } catch (error) {
-    console.error('Error fetching savings history:', error)
-  } finally {
-    isLoading.value = false
-  }
-}
-  
 
 const getUser = async () => {
   isLoading.value = true
@@ -147,7 +122,6 @@ const getUser = async () => {
   onMounted(() => {
     getUserDash()
 
-    getActiveLoan()
   })
 
   </script>
