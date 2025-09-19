@@ -403,7 +403,7 @@ const userNavItems = [
   },
   {
     name: 'Profile',
-    to: '/profile ',
+    to: '/profile',
     icon: defineComponent({
       render() {
         return h('svg', {

@@ -63,7 +63,7 @@
           </div>
         </div>
       </div>
-  
+<!--   
       <div class="mt-6">
         <button
           @click="logout"
@@ -71,7 +71,7 @@
         >
           Logout
         </button>
-      </div>
+      </div> -->
     </div>
   </template>
   
