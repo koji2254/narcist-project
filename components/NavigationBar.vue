@@ -7,7 +7,7 @@
         <div class="flex items-center">
           <!-- Logo -->
           <div class="flex-shrink-0 flex items-center mr-6">
-            <NuxtLink to="/dashboard" class="flex items-center">
+            <NuxtLink :to="logoLink" class="flex items-center">
               <img 
                 src="@/public/narict logo.jpg" 
                 alt="NARICT Logo" 
@@ -21,7 +21,7 @@
             </NuxtLink>
           </div>
           
-          <!-- Desktop Navigation Links -->
+          <!-- Desktop Navigation Links Admin -->
           <div v-if="role === 'admin'" class="hidden md:flex md:space-x-6">
             <NuxtLink 
               v-for="(item, index) in navItems" 
@@ -38,10 +38,30 @@
               {{ item.name }}
             </NuxtLink>
           </div>
+         
+          <!-- Desktop Navigation Links User -->
+          <div v-if="role === 'user'" class="hidden md:flex md:space-x-6">
+            <NuxtLink 
+              v-for="(item, index) in userNavItems" 
+              :key="index"
+              :to="item.to"
+              class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150"
+              :class="[
+                $route.path === item.to 
+                  ? 'text-emerald-700 bg-emerald-50' 
+                  : 'text-gray-600 hover:text-emerald-700 hover:bg-gray-50'
+              ]"
+            >
+              <component :is="item.icon" class="h-5 w-5 mr-1.5" />
+              {{ item.name }}
+            </NuxtLink>
+          </div>
+
         </div>
         
         <!-- Right Side Menu -->
-        <div v-if="role === 'admin'" class="flex items-center space-x-4">
+        <!-- <div v-if="role === 'admin'" class="flex items-center space-x-4"> -->
+        <div class="flex items-center space-x-4">
           <!-- Notification Bell -->
           <button class="p-2 rounded-full text-gray-500 hover:text-emerald-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 relative">
             <span class="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
@@ -81,12 +101,15 @@
                 v-if="isUserMenuOpen" 
                 class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50"
               >
-                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Your Profile</a>
-                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                <!-- <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Your Profile</a>
+                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a> -->
                 <a @click="logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sign out</a>
               </div>
             </transition>
           </div>
+
+          <!-- User Menu -->
+        
           
           <!-- Mobile menu button -->
           <div class="md:hidden">
@@ -119,6 +142,7 @@
               </svg>
             </button>
           </div>
+
         </div>
       </div>
     </div>
@@ -135,7 +159,7 @@
       <div v-if="isMobileMenuOpen" class="md:hidden bg-white border-b border-gray-200">
         <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <NuxtLink
-            v-for="(item, index) in navItems"
+            v-for="(item, index) in role === 'user' ? userNavItems : navItems"
             :key="index"
             :to="item.to"
             class="flex items-center px-3 py-2 rounded-md text-base font-medium"
@@ -174,6 +198,21 @@ onMounted(() => {
   loadRole() // Load role AFTER page is mounted
 })
 
+// LOGO SECTION 
+
+const logoLink = ref('/user') // default
+
+onMounted(() => {
+  loadRole() // existing call to load role
+  const storedUser = localStorage.getItem('user_info')
+  if (storedUser) {
+    const parsed = JSON.parse(storedUser)
+    logoLink.value = parsed?.role === 'admin' ? '/dashboard' : '/user'
+  }
+})
+
+// ........
+
 // Toggle user menu and prevent event bubbling
 const toggleUserMenu = (event) => {
   event.stopPropagation()
@@ -200,6 +239,7 @@ if (process.client) {
     window.removeEventListener('click', closeUserMenu)
   })
 }
+
 
 // Navigation items with icons
 const navItems = [
@@ -292,6 +332,100 @@ const navItems = [
     })
   }
 ]
+
+// Navigation items with icons
+const userNavItems = [
+  {
+    name: 'Dashboard',
+    to: '/user',
+    icon: defineComponent({
+      render() {
+        return h('svg', {
+          xmlns: 'http://www.w3.org/2000/svg',
+          class: 'h-5 w-5',
+          fill: 'none',
+          viewBox: '0 0 24 24',
+          stroke: 'currentColor'
+        }, [
+          h('path', {
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+            'stroke-width': '2',
+            d: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'
+          })
+        ])
+      }
+    })
+  },
+  {
+    name: 'Savings',
+    to: '/savings/userSavingshistory',
+    icon: defineComponent({
+      render() {
+        return h('svg', {
+          xmlns: 'http://www.w3.org/2000/svg',
+          class: 'h-5 w-5',
+          fill: 'none',
+          viewBox: '0 0 24 24',
+          stroke: 'currentColor'
+        }, [
+          h('path', {
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+            'stroke-width': '2',
+            d: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+          })
+        ])
+      }
+    })
+  },
+  {
+    name: 'Loans',
+    to: '/loans/userLoanhistory',
+    icon: defineComponent({
+      render() {
+        return h('svg', {
+          xmlns: 'http://www.w3.org/2000/svg',
+          class: 'h-5 w-5',
+          fill: 'none',
+          viewBox: '0 0 24 24',
+          stroke: 'currentColor'
+        }, [
+          h('path', {
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+            'stroke-width': '2',
+            d: 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z'
+          })
+        ])
+      }
+    })
+  },
+  {
+    name: 'Profile',
+    to: '/profile ',
+    icon: defineComponent({
+      render() {
+        return h('svg', {
+          xmlns: 'http://www.w3.org/2000/svg',
+          class: 'h-5 w-5',
+          fill: 'none',
+          viewBox: '0 0 24 24',
+          stroke: 'currentColor'
+        }, [
+          h('path', {
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+            'stroke-width': '2',
+            d: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'
+          })
+        ])
+      }
+    })
+  }
+]
+
+
 </script>
 
 <style scoped>
