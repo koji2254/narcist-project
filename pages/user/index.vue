@@ -1,6 +1,6 @@
 <template>
   <Spinner v-if="isLoading" />
-    <div class="container mx-auto px-4 py-2 bg-white">
+    <div class="container mx-auto p-2 md:px-4 py-2 bg-white">
       <header class="mb-8">
         <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M180-120q-25 0-42.5-17.5T120-180v-76l160-142v278H180Zm140 0v-160h320v160H320Zm360 0v-328L509-600l121-107 190 169q10 9 15 20.5t5 24.5v313q0 25-17.5 42.5T780-120H680ZM120-310v-183q0-13 5-25t15-20l300-266q8-8 18.5-11.5T480-819q11 0 21.5 3.5T520-804l80 71-480 423Z"/></svg>
@@ -8,11 +8,11 @@
         </h1>
       </header>
   
-      <div class="bg-white rounded-lg p-6">
+      <div class="bg-white rounded-lg p-0 md:p-6 ">
         
         <div class="space-y-4">
            <div v-if="userStats">
-            <div class="bg-gray-50  mb-3 shadow">
+            <div class="bg-gray-50 mb-3 shadow">
               <h3 class="text-xs flex p-2 items-center text-gray-600">
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#0BAE3C"><path d="m438-338 226-226-57-57-169 169-84-84-57 57 141 141Zm42 258q-139-35-229.5-159.5T160-516v-244l320-120 320 120v244q0 152-90.5 276.5T480-80Zm0-84q104-33 172-132t68-220v-189l-240-90-240 90v189q0 121 68 220t172 132Zm0-316Z"/></svg> Profile:</h3> 
               <span class="text-lg font-semibold my-1 p-2">{{userStats.fullName}}</span>
