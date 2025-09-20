@@ -19,7 +19,7 @@
               <div class="flex justify-between w-full text-xs p-2 bg-white">
                 <div class=""></div>
                  <NuxtLink to="profile">
-                  <span class="">View Profile</span>
+                  <span class="">Profile</span>
                 </NuxtLink>
                 
               </div>
@@ -50,7 +50,7 @@
                <div class="flex justify-between w-full text-xs p-2 bg-white">
                 <div class=""></div>
                 <NuxtLink to="/loans/userLoanhistory">
-                  <span class="">View history</span>
+                  <span class="">View Loan</span>
                 </NuxtLink>
                 
               </div>
@@ -58,9 +58,9 @@
             <!--  -->
             <!--  -->
           </div>
-          <div v-else>
+          <!-- <div v-else>
             <p>Loading user stats...</p>
-          </div>
+          </div> -->
         </div>
       </div>
 <!--   
