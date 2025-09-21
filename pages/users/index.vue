@@ -514,8 +514,8 @@
                 </span>
               </div>
               <div>
-                <p class="text-xs font-medium text-gray-500 mb-1">Joined</p>
-                <p class="text-sm font-semibold text-gray-900">May 12, 2023</p>
+                <!-- <p class="text-xs font-medium text-gray-500 mb-1">Joined</p>
+                <p class="text-sm font-semibold text-gray-900">May 12, 2023</p> -->
               </div>
             </div>
           </div>

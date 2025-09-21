@@ -129,7 +129,7 @@ const getUsersDetails = async () => {
         activities.push({
           id: index + 1,
           person: user.fullName,
-          description: `${action} ${amount} from savings`,
+          description: `${action} ${amount}`,
           date: new Date(lastTxn.date).toLocaleString(), // format to your style
           icon: BanknotesIcon,
           iconBackground: iconColor,
