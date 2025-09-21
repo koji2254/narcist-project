@@ -64,7 +64,7 @@
           Showing <span class="font-medium">{{ filteredLoans.length }}</span> of <span class="font-medium">{{ loans.length }}</span> loans
         </p>
         <div class="flex space-x-2">
-          <button class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+          <button @click="exportLoanFile" class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
@@ -937,10 +937,25 @@ const confirmCompleteLoan = async () => {
 
 
   }
+}
 
 
-
-
+// Export data in excel format
+const exportLoanFile = async () => {
+    isLoading.value = true
+  try {
+     const token = localStorage.getItem('auth_token')
+    const response = await axios.get(`${baseUrl}/loan/loan-stats`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    
+  } catch (error) {
+    console.error('Error fetching Loan data:', error)
+  } finally {
+    isLoading.value = false
+  }
 }
 
 
