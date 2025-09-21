@@ -946,11 +946,29 @@ const exportLoanFile = async () => {
   try {
      const token = localStorage.getItem('auth_token')
     const response = await axios.get(`${baseUrl}/loan/loan-stats`, {
-      headers: {
+          headers: {
         Authorization: `Bearer ${token}`,
       },
+      responseType: 'blob', // 👈 very important
     })
-    
+
+    // Create a blob from the response
+    const blob = new Blob([response.data], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    })
+
+    // Create a link element to download
+    const link = document.createElement('a')
+    link.href = window.URL.createObjectURL(blob)
+
+    // You can set a default filename
+    link.download = 'loans-stats.xlsx'
+
+    // Append, click and remove the link
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
   } catch (error) {
     console.error('Error fetching Loan data:', error)
   } finally {

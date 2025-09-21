@@ -172,7 +172,7 @@
           Showing <span class="font-medium">{{ filteredUsers.length }}</span> of <span class="font-medium">{{ users.length }}</span> users
         </p>
         <div class="flex space-x-2">
-          <button class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+          <button @click="exportUserData" class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
@@ -756,6 +756,46 @@ const filteredUsers = computed(() => {
     return true
   })
 })
+
+
+
+// Export data in excel format
+const exportUserData = async () => {
+  isLoading.value = true
+  try {
+    const token = localStorage.getItem('auth_token')
+    const response = await axios.get(`${baseUrl}/dashboard/general-stats`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      responseType: 'blob', // 👈 very important
+    })
+
+    // Create a blob from the response
+    const blob = new Blob([response.data], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    })
+
+    // Create a link element to download
+    const link = document.createElement('a')
+    link.href = window.URL.createObjectURL(blob)
+
+    // You can set a default filename
+    link.download = 'users-stats.xlsx'
+
+    // Append, click and remove the link
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+  } catch (error) {
+    console.error('Error fetching users data:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+
 
 // Methods
 const formatCurrency = (value) => {
