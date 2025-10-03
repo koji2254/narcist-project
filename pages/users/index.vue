@@ -532,7 +532,7 @@
               <input 
                 v-model="newPassword" 
                 type="password" 
-                placeholder="Enter new password"
+                placeholder="Enter new password (min 8 characters)"
                 class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm 
                       ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 
                       focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
@@ -694,6 +694,11 @@ const saveNewPassword = async () => {
   // Check to make sure password feild is not empty
   if (!newPassword.value || newPassword.value.trim() === "") {
     alert("Please insert new password");
+    return;
+  }
+
+   if (newPassword.value.length < 8) {
+    alert("Password must be at least 8 characters long");
     return;
   }
 
