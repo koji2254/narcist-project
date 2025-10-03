@@ -478,11 +478,17 @@
         <div class="mt-3">
           <div class="flex items-center mb-6">
             <div>
-              <h3 class="text-xl font-bold text-gray-900">{{ selectedUser?.fullName }}</h3>
+              <h3 class="text-xl font-bold text-gray-900 flex items-center gap-1">
+              <span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                </svg>
+              </span>
+              {{ selectedUser?.fullName }}</h3>
             </div>
           </div>
           
-          <div class="bg-gray-50 rounded-lg p-4 mb-6">
+          <div class="bg-gray-50 rounded-lg p-4 mb-5">
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <p class="text-xs font-medium text-gray-500 mb-1">IPSS No.</p>
@@ -501,26 +507,10 @@
                   {{ selectedUser?.role }}
                 </span>
               </div>
-              <div>
-                <p class="text-xs font-medium text-gray-500 mb-1">Status</p>
-                <span
-                  class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full"
-                  :class="{
-                    'bg-green-100 text-green-800': selectedUser?.status === 'active',
-                    'bg-red-100 text-red-800': selectedUser?.status === 'inactive'
-                  }"
-                >
-                  {{ selectedUser?.status }}
-                </span>
-              </div>
-              <div>
-                <!-- <p class="text-xs font-medium text-gray-500 mb-1">Joined</p>
-                <p class="text-sm font-semibold text-gray-900">May 12, 2023</p> -->
-              </div>
             </div>
           </div>
           
-          <div class="mb-6">
+          <div class="mb-5">
             <h4 class="text-sm font-medium text-gray-700 mb-2">Financial Summary</h4>
             <div class="bg-gray-50 rounded-lg p-4 grid grid-cols-2 gap-4">
               <div>
@@ -533,6 +523,35 @@
               </div>
             </div>
           </div>
+          
+        <div class="mb-5">
+          <h4 class="text-sm font-medium text-gray-700 mb-2">Reset User Password</h4>
+          <div class="bg-gray-50 rounded-lg p-4 grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-xs font-medium text-gray-500 mb-1">New Password</p>
+              <input 
+                v-model="newPassword" 
+                type="password" 
+                placeholder="Enter new password"
+                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm 
+                      ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 
+                      focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
+              />
+
+              <button
+                @click="saveNewPassword"
+                :disabled="isLoading"
+                class="mt-3 inline-flex items-center px-4 py-1.5 border border-emerald-400 shadow-sm 
+                      text-sm font-medium rounded-md text-emerald-700 bg-gray-100 
+                      hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 
+                      focus:ring-emerald-500"
+              >
+                <span v-if="!isLoading">Save password</span>
+                <span v-else>Saving...</span>
+              </button>
+            </div>
+          </div>
+        </div>
           
           <div class="flex justify-between">
             <!-- <button 
@@ -576,6 +595,7 @@ import AlertCard from '~/components/AlertCard.vue'
 const users = ref([])
 const isLoading = ref(false)
 const alertDetails = ref(null)
+const newPassword = ref("")
 
 // Mock Savings data (from your Savings page)
 const savingsData = ref([
@@ -667,6 +687,42 @@ const getUsersDetails = async () => {
     console.error('Error fetching data:', error)
   } finally {
     isLoading.value = false
+  }
+}
+
+const saveNewPassword = async () => {
+  // Check to make sure password feild is not empty
+  if (!newPassword.value || newPassword.value.trim() === "") {
+    alert("Please insert new password");
+    return;
+  }
+
+  const newData = {
+    ipssNumber: selectedUser.value.ipssNumber,
+    newPassword: newPassword.value,
+  };
+
+  isLoading.value = true;
+  try {
+    const token = localStorage.getItem("auth_token");
+
+    await axios.post(
+      `${baseUrl}/auth/resetPassword`,
+      newData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    alert("Password updated successfully!");
+    newPassword.value = ""; // clear field
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    alert("Failed to reset password.");
+  } finally {
+    isLoading.value = false;
   }
 }
 
