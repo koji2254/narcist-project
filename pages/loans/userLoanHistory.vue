@@ -1,133 +1,208 @@
 <template>
-  <Spinner v-if="isLoading" />
-    <div class="container mx-auto px-4 py-2 bg-white">
-      <header class="mb-8">
-        <h1 class="text-xl font-bold text-gray-700 flex items-center gap-2">
-         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#7781EE"><path d="M336-120q-91 0-153.5-62.5T120-336q0-38 13-74t37-65l142-171-97-194h530l-97 194 142 171q24 29 37 65t13 74q0 91-63 153.5T624-120H336Zm144-200q-33 0-56.5-23.5T400-400q0-33 23.5-56.5T480-480q33 0 56.5 23.5T560-400q0 33-23.5 56.5T480-320Zm-95-360h190l40-80H345l40 80Zm-49 480h288q57 0 96.5-39.5T760-336q0-24-8.5-46.5T728-423L581-600H380L232-424q-15 18-23.5 41t-8.5 47q0 57 39.5 96.5T336-200Z"/></svg>
-          Loans Balance
-        </h1>
-        <div class="flex items-start justify-between">
-        <div class="font-light flex items-center">
-         <h2 v-if="userStats" class="font-semibold p-2 my-2">₦{{ formatCurrency(userStats.approvedLoanBalance) }}</h2>
-        </div>
-          <h2 class="p-2 my- flex items-center gap-1">
-           <!-- <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Zm40-308 198-252H282l198 252Zm0 0Z"/></svg> sort -->
-          </h2>
-        </div>
-      </header>
-  
-      <div class="bg-white rounded-lg">
-        
-        <!-- <div class="space-y-1">
-           <div v-if="userStats">
-            <div class="bg-gray-50 shadow mb-2">
-              <h3 class="text-md flex items-center p-2 py-1">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#8B1A10" class="size-6">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
-              </svg>
-              <span class="text-lg font-semibold my-1 p-2 py-1">₦{{ formatCurrency(userStats.totalSaving) }}</span>
-              </h3> 
-              <div class="flex items-center text-xs px-6">
-              <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#8B1A10"><path d="M440-240v-368L296-464l-56-56 240-240 240 240-56 56-144-144v368h-80Z"/></svg>
-              Widthdraw</div>
-              <div class="flex justify-between w-full text-xs text-gray-600 p-2 bg-white">
-                <div class=""></div>
-                <div class="font-semibold">17/17/2025 2:45 AM</div>
-              </div>
-            </div>
+  <div class="p-6 bg-gray-50 min-h-screen">
+    <h3 class="text-xl font-semibold mb-6 text-gray-800 flex items-center gap-1 space-x-2">
+    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#7781EE"><path d="M336-120q-91 0-153.5-62.5T120-336q0-38 13-74t37-65l142-171-97-194h530l-97 194 142 171q24 29 37 65t13 74q0 91-63 153.5T624-120H336Zm144-200q-33 0-56.5-23.5T400-400q0-33 23.5-56.5T480-480q33 0 56.5 23.5T560-400q0 33-23.5 56.5T480-320Zm-95-360h190l40-80H345l40 80Zm-49 480h288q57 0 96.5-39.5T760-336q0-24-8.5-46.5T728-423L581-600H380L232-424q-15 18-23.5 41t-8.5 47q0 57 39.5 96.5T336-200Z"/></svg>
+    Loan History</h3>
 
-          </div>
-          <div v-else>
-            <p>Loading user stats...</p>
-          </div>
-        </div> -->
-      </div>
-
+    <div v-if="isLoading" class="flex justify-center items-center py-12">
+      <Spinner />
     </div>
-  </template>
-  
-  <script setup>
-  import { ref, onMounted} from 'vue'
-  import { useRouter } from 'vue-router'
-  import { baseUrl } from '~/assets/proxy'
-  import Spinner from '~/components/Spinner.vue'
-  import axios from 'axios'
 
-  
-  // Mock user data (could be fetched from an API in a real app)
-  const router = useRouter()
-  const isLoading = ref(false)
-  const userStats = ref(null)
-  const activeLoan = ref([])
-  
+    <div v-else>
+      <div
+        v-for="loan in sortedLoans"
+        :key="loan._id"
+        class="bg-white shadow-sm hover:shadow-md transition-all mb-4 rounded border border-gray-100 overflow-hidden"
+      >
+        <!-- Header -->
+        <div
+          class="flex justify-between items-center p-4 cursor-pointer bg-gray-50 hover:bg-gray-100"
+          @click="toggleLoan(loan._id)"
+        >
+          <div>
+            <h3 class="font-semibold text-md text-gray-800">
+              ₦{{ formatCurrency(loan.amount) }}
+            </h3>
+            <p class="text-sm text-gray-600">
+              Term: {{ loan.term_month }} months
+            </p>
+          </div>
 
-  const formatCurrency = (value) => {
-    return value.toLocaleString('en-NG', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    })
-  }
-  
+          <div class="flex items-center space-x-3">
+            <span
+              class="px-3 py-1 rounded-full text-xs md:text-sm font-medium capitalize"
+              :class="{
+                'bg-green-100 text-green-700': loan.status === 'completed',
+                'bg-yellow-100 text-yellow-700': loan.status === 'pending',
+                'bg-blue-100 text-blue-700': loan.status === 'approved',
+                'bg-red-100 text-red-700': loan.status === 'declined'
+              }"
+            >
+              {{ loan.status }}
+            </span>
 
-const getUserDash = async () => {
-  isLoading.value = true
-  try {
-     const token = localStorage.getItem('auth_token')
-    const response = await axios.get(`${baseUrl}/dashboard/user`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-    
-    // console.log(user)
-    userStats.value = response.data
-    console.log(response.data)
-  } catch (error) {
-    console.error('Error fetching savings history:', error)
-  } finally {
-    isLoading.value = false
-  }
-}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-5 h-5 text-gray-500 transition-transform duration-300"
+              :class="{ 'rotate-180': expandedLoans.includes(loan._id) }"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+              />
+            </svg>
+          </div>
+        </div>
 
+        <!-- Drop Down Section -->
+        <div
+          v-if="expandedLoans.includes(loan._id)"
+          class="p-4 border-t border-gray-100 bg-white text-gray-700"
+        >
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+            <div>
+              <span class="font-medium text-gray-600">Interest Rate:</span>
+              {{ loan.totalInterest }}%
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Interest Amount:</span>
+              ₦{{ formatCurrency(loan.interestAmount) }}
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Recurring Fee:</span>
+              ₦{{ formatCurrency(loan.recurringFee) }}
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Final Payment:</span>
+              ₦{{ formatCurrency(loan.finalPayment) }}
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Created:</span>
+              {{ formatDate(loan.createdAt) }}
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Updated:</span>
+              {{ formatDate(loan.updatedAt) }}
+            </div>
+          </div>
 
+          <!-- Monthly Installments -->
+          <div class="mt-4">
+            <h4 class="font-semibold text-gray-800 mb-2">Monthly Installments</h4>
+            <div
+              v-for="install in loan.monthlyInstallment"
+              :key="install._id"
+              class="flex justify-between items-center border border-gray-100 rounded-lg px-3 py-2 mb-2 bg-gray-50"
+            >
+              <div class="text-sm text-gray-700">
+                Month {{ install.month }}: ₦{{ formatCurrency(install.amount) }}
+              </div>
+              <span
+                class="text-xs font-medium px-2 py-1 rounded-full"
+                :class="install.paid
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-red-100 text-red-700'"
+              >
+                {{ install.paid ? 'Paid' : 'Unpaid' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
 
-const getUser = async () => {
-  isLoading.value = true
-  try {
-     const token = localStorage.getItem('auth_token')
-     const ipssNumber = {
-      ipssNumber
-     }
-    const response = await axios.post(`${baseUrl}/auth/user/get-user-details`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+<script setup>
+import { ref, onMounted, computed } from 'vue'
+import Spinner from '~/components/Spinner.vue'
+import axios from 'axios'
+import { baseUrl } from '~/assets/proxy'
 
-  } catch (error) {
-    console.error('Error fetching savings history:', error)
-  } finally {
-    isLoading.value = false
-  }
-}
+const isLoading = ref(false)
+const activeLoanList = ref({ Loans: [] })
+const expandedLoans = ref([])
 
-
-  const logout = () => {
-    // Simple logout: Navigate back to login page
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('user_info')
-    router.push('../')
-  }
-
-  onMounted(() => {
-    getUserDash()
-
+// ✅ Formatting helpers
+const formatCurrency = (value) =>
+  Number(value).toLocaleString('en-NG', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   })
 
-  </script>
-  
-  <style scoped>
-  .btn-secondary {
-    @apply px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+const formatDate = (dateString) => {
+  if (!dateString) return '—'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-GB', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
+// ✅ Toggle open/close
+const toggleLoan = (id) => {
+  if (expandedLoans.value.includes(id)) {
+    expandedLoans.value = expandedLoans.value.filter((loanId) => loanId !== id)
+  } else {
+    expandedLoans.value.push(id)
   }
-  </style>
+}
+
+// ✅ Sort by newest first
+const sortedLoans = computed(() => {
+  if (!activeLoanList.value.Loans) return []
+  return [...activeLoanList.value.Loans].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  )
+})
+
+// ✅ Fetch data
+const getUserLoanHistory = async () => {
+  isLoading.value = true
+  try {
+    const token = localStorage.getItem('auth_token')
+    const response = await axios.get(`${baseUrl}/loan/user-loan-history`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    activeLoanList.value = response.data
+  } catch (error) {
+    console.error('Error fetching loan history:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => getUserLoanHistory())
+</script>
+
+  
+<style scoped>
+.text-wine {
+  color: #8b1538;
+}
+.bg-wine {
+  background-color: #8b1538;
+}
+.bg-wine\/10 {
+  background-color: rgba(139, 21, 56, 0.1);
+}
+.bg-wine\/20 {
+  background-color: rgba(139, 21, 56, 0.2);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+}
+</style>
