@@ -14,7 +14,7 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
       <div class="flex items-start gap-4">
         <!-- Avatar placeholder -->
-        <div class="bg-gray-200 border-2 border-dashed rounded-full w-20 h-20 flex-shrink-0"></div>
+        <!-- <div class="bg-gray-200 border-2 border-dashed rounded-full w-20 h-20 flex-shrink-0"></div> -->
 
         <div class="flex-1">
           <h2 class="text-xl font-semibold text-gray-900">{{ userStats?.fullName ?? '-' }}</h2>
