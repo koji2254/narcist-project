@@ -149,6 +149,7 @@
               <option value="all">All Roles</option>
               <option value="admin">Admin</option>
               <option value="worker">Worker</option>
+              <option value="user">user</option>
             </select>
           </div>
           
@@ -201,62 +202,39 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="user in filteredUsers" :key="user.ipssNumber" class="hover:bg-gray-50 transition-colors duration-150">
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <div class="h-10 w-10 flex-shrink-0">
-                  </div>
-                  <div class="ml-4">
-                    <div class="text-sm font-medium text-gray-900">{{ user.fullName }}</div>
-                  </div>
+          <tr v-for="user in filteredUsers" :key="user._id" class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <div>
+                  <div class="text-sm font-medium text-gray-900">{{ user.fullName }}</div>
+                  <div class="text-sm text-gray-500">ID: {{ user.ipssNumber }}</div>
                 </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span
-                  class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full"
-                  :class="{
-                    'bg-purple-100 text-purple-800': user.role === 'admin',
-                    'bg-emerald-100 text-emerald-800': user.role === 'worker'
-                  }"
-                >
-                  {{ user.role }}
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                ₦{{ users && formatCurrency(user.totalSaving) }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <span class="text-sm text-gray-900">{{ user.activeLoans }}</span>
-                  <span v-if="user.activeLoans > 0" class="ml-2 flex-shrink-0 h-2 w-2 rounded-full bg-emerald-500"></span>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span
-                  class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full"
-                  :class="{
-                    'bg-green-100 text-green-800': user.status === 'active',
-                    'bg-red-100 text-red-800': user.status === 'inactive'
-                  }"
-                >
-                  {{ user.status }}
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button
-                  @click="viewUserDetails(user)"
-                  class="text-emerald-600 hover:text-emerald-900 mr-4 transition-colors duration-150"
-                >
-                  View
-                </button>
-                <!-- <button
-                  @click="editUser(user)"
-                  class="text-emerald-600 hover:text-emerald-900 transition-colors duration-150"
-                >
-                  Edit
-                </button> -->
-              </td>
-            </tr>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full"
+                    :class="user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'">
+                {{ user.role }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              ₦{{ formatCurrency(user.totalSaving) }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <span class="text-sm text-gray-900">{{ user.activeLoans }}</span>
+                <span v-if="user.activeLoans > 0" class="ml-2 h-2 w-2 rounded-full bg-emerald-500"></span>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                {{ user.status }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <button @click="viewUserDetails(user)" class="text-emerald-600 hover:text-emerald-900">View</button>
+            </td>
+          </tr>
             <tr v-if="filteredUsers.length === 0">
               <td colspan="6" class="px-6 py-10 text-center text-sm text-gray-500">
                 <div class="flex flex-col items-center justify-center">
@@ -284,34 +262,29 @@
           :key="user.id" 
           class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300"
         >
-          <div class="p-4 border-b border-gray-200 flex items-center justify-between">
-            <div class="flex items-center">
-              <div class="ml-0">
-                <h3 class="text-sm font-medium text-gray-900">{{ user.fullName }}</h3>
-              </div>
-            </div>
-            <div class="flex space-x-2">
-              <span
-                class="px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full"
-                :class="{
-                  'bg-green-100 text-green-800': user.status === 'active',
-                  'bg-red-100 text-red-800': user.status === 'inactive'
-                }"
-              >
-                {{ user.status }}
-              </span>
-              <span
-                class="px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full"
-                :class="{
-                  'bg-purple-100 text-purple-800': user.role === 'admin',
-                  'bg-emerald-100 text-emerald-800': user.role === 'worker',
-                  'bg-emerald-100 text-emerald-950': user.role === 'user'
-                }"
-              >
-                {{ user.role }}
-              </span>
-            </div>
+        <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-medium text-gray-900">{{ user.fullName }}</h3>
+            <p class="text-xs text-gray-500">ID: {{ user.ipssNumber }}</p>
           </div>
+          <div class="flex gap-1">
+            <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+            <span class="px-2 py-0.5 text-xs font-semibold rounded-full"
+                  :class="user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'">
+              {{ user.role }}
+            </span>
+          </div>
+        </div>
+        <div class="p-4 grid grid-cols-2 gap-4">
+          <div>
+            <p class="text-xs font-medium text-gray-500">Savings</p>
+            <p class="text-sm font-semibold text-gray-900">₦{{ formatCurrency(user.totalSaving) }}</p>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-gray-500">Loans</p>
+            <p class="text-sm font-semibold text-gray-900">{{ user.activeLoans }}</p>
+          </div>
+        </div>
           <div class="p-4 grid grid-cols-2 gap-4">
             <div>
               <p class="text-xs font-medium text-gray-500">Total Savings</p>
@@ -382,15 +355,6 @@
               <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-emerald-50 text-sm font-medium text-emerald-600 hover:bg-emerald-100">
                 1
               </button>
-              <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                2
-              </button>
-              <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                3
-              </button>
-              <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                ...
-              </span>
               <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                 <span class="sr-only">Next</span>
                 <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -510,19 +474,29 @@
             </div>
           </div>
           
-          <div class="mb-5">
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Financial Summary</h4>
-            <div class="bg-gray-50 rounded-lg p-4 grid grid-cols-2 gap-4">
-              <div>
-                <p class="text-xs font-medium text-gray-500 mb-1">Total Savings</p>
-                <p class="text-lg font-bold text-emerald-600">₦{{ users && formatCurrency(selectedUser?.totalSaving) }}</p>
-              </div>
-              <div>
-                <p class="text-xs font-medium text-gray-500 mb-1">Active Loans</p>
-                <p class="text-lg font-bold text-blue-600">{{ selectedUser?.activeLoans }}</p>
+
+          <!--  -->
+        <div class="mb-5">
+          <h4 class="text-sm font-medium text-gray-700 mb-2">Financial Summary</h4>
+          <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+            <div class="flex justify-between">
+              <span class="text-xs font-medium text-gray-500">Total Savings</span>
+              <span class="text-sm font-bold text-emerald-600">₦{{ formatCurrency(selectedUser?.totalSaving) }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-xs font-medium text-gray-500">Active Loans</span>
+              <span class="text-sm font-bold text-blue-600">{{ selectedUser?.activeLoans }}</span>
+            </div>
+            <div v-if="selectedUser?.hasNextPayment" class="flex justify-between pt-2 border-t">
+              <span class="text-xs font-medium text-gray-500">Next Payment</span>
+              <div class="text-right">
+                <span class="text-sm font-bold text-red-600">₦{{ formatCurrency(selectedUser?.nextPaymentAmount) }}</span>
+                <p class="text-xs text-gray-500">{{ formatDate(selectedUser?.nextPaymentDate) }}</p>
               </div>
             </div>
+            <div v-else class="text-xs text-gray-500 pt-2 border-t">No active loan</div>
           </div>
+        </div>
           
         <div class="mb-5">
           <h4 class="text-sm font-medium text-gray-700 mb-2">Reset User Password</h4>
@@ -595,278 +569,130 @@ import AlertCard from '~/components/AlertCard.vue'
 const users = ref([])
 const isLoading = ref(false)
 const alertDetails = ref(null)
-const newPassword = ref("")
+const newPassword = ref('')
+const selectedUser = ref(null)
 
-// Mock Savings data (from your Savings page)
-const savingsData = ref([
-  {
-    id: '1',
-    userId: 'USR001',
-    userName: 'John Doe',
-    amount: 50000,
-    date: new Date(),
-    type: 'deposit',
-    balance: 150000
-  },
-  {
-    id: '2',
-    userId: 'USR002',
-    userName: 'Jane Smith',
-    amount: 25000,
-    date: new Date(Date.now() - 86400000),
-    type: 'deposit',
-    balance: 75000
-  },
-  {
-    id: '3',
-    userId: 'USR003',
-    userName: 'Mike Johnson',
-    amount: 10000,
-    date: new Date(),
-    type: 'withdrawal',
-    balance: 40000
-  }
-])
-
-// Mock Loans data (from your Loans page)
-const loansData = ref([
-  {
-    id: '1',
-    userId: 'USR001',
-    userName: 'John Doe',
-    amount: 100000,
-    duration: 6,
-    status: 'pending',
-    nextPayment: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-  },
-  {
-    id: '2',
-    userId: 'USR002',
-    userName: 'Jane Smith',
-    amount: 250000,
-    duration: 12,
-    status: 'approved',
-    nextPayment: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
-  },
-  {
-    id: '3',
-    userId: 'USR003',
-    userName: 'Mike Johnson',
-    amount: 50000,
-    duration: 3,
-    status: 'rejected',
-    nextPayment: new Date()
-  },
-  {
-    id: '4',
-    userId: 'USR004',
-    userName: 'Sarah Brown',
-    amount: 150000,
-    duration: 9,
-    status: 'completed',
-    nextPayment: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
-  }
-])
-
-
-// Get Users Details get-users-details
-const getUsersDetails = async () => {
-  isLoading.value = true
-  try {
-    const token = localStorage.getItem('auth_token')
-    const response = await axios.get(`${baseUrl}/auth/get-users-details`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-
-    users.value = response.data.users
-
-  
-  } catch (error) {
-    console.error('Error fetching data:', error)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const saveNewPassword = async () => {
-  // Check to make sure password feild is not empty
-  if (!newPassword.value || newPassword.value.trim() === "") {
-    alert("Please insert new password");
-    return;
-  }
-
-   if (newPassword.value.length < 8) {
-    alert("Password must be at least 8 characters long");
-    return;
-  }
-
-  const newData = {
-    ipssNumber: selectedUser.value.ipssNumber,
-    newPassword: newPassword.value,
-  };
-
-  isLoading.value = true;
-  try {
-    const token = localStorage.getItem("auth_token");
-
-    await axios.post(
-      `${baseUrl}/auth/resetPassword`,
-      newData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    alert("Password updated successfully!");
-    newPassword.value = ""; // clear field
-  } catch (error) {
-    console.error("Error resetting password:", error);
-    alert("Failed to reset password.");
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-onMounted(() => {
-  getUsersDetails()
-})
-
-
-// Aggregate users from Savings and Loans
-// const users = computed(() => {
-//   const userMap = new Map()
-
-//   savingsData.value.forEach(saving => {
-//     if (!userMap.has(saving.userId)) {
-//       userMap.set(saving.userId, {
-//         id: saving.userId,
-//         name: saving.userName,
-//         email: `${saving.userName.toLowerCase().replace(' ', '.')}@example.com`,
-//         role: saving.userId === 'USR002' ? 'admin' : 'worker',
-//         totalSaving: 0,
-//         activeLoans: 0,
-//         status: 'active',
-//         avatar: `https://images.unsplash.com/photo-${saving.userId === 'USR001' ? '1472099645785-5658abf4ff4e' : saving.userId === 'USR002' ? '1494790108377-be9c29b29330' : saving.userId === 'USR003' ? '1519345182560-3f2917c472ef' : '1517364891578-8e8b9f5b8e8b'}?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80`
-//       })
-//     }
-//     const user = userMap.get(saving.userId)
-//     user.totalSaving = saving.balance
-//   })
-
-//   loansData.value.forEach(loan => {
-//     if (!userMap.has(loan.userId)) {
-//       userMap.set(loan.userId, {
-//         id: loan.userId,
-//         name: loan.userName,
-//         email: `${loan.userName.toLowerCase().replace(' ', '.')}@example.com`,
-//         role: loan.userId === 'USR002' ? 'admin' : 'worker',
-//         totalSaving: 0,
-//         activeLoans: 0,
-//         status: 'active',
-//         avatar: `https://images.unsplash.com/photo-${loan.userId === 'USR001' ? '1472099645785-5658abf4ff4e' : loan.userId === 'USR002' ? '1494790108377-be9c29b29330' : loan.userId === 'USR003' ? '1519345182560-3f2917c472ef' : '1517364891578-8e8b9f5b8e8b'}?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80`
-//       })
-//     }
-//     const user = userMap.get(loan.userId)
-//     if (loan.status === 'approved' || loan.status === 'pending') {
-//       user.activeLoans += 1
-//     }
-//   })
-
-//   return Array.from(userMap.values())
-// })
-
-// State
+// Filters
 const searchQuery = ref('')
 const roleFilter = ref('all')
 const statusFilter = ref('all')
+
+// Modals
 const isUserModalOpen = ref(false)
 const showDetailsModal = ref(false)
-const selectedUser = ref(null)
+
+// Form
 const formUser = ref({
   id: '',
   name: '',
   phone: '',
-  role: 'worker',
-  totalSaving: 0,
-  activeLoans: 0,
-  status: 'active',
-  avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
+  role: 'worker'
 })
 
-// Computed
-const filteredUsers = computed(() => {
-  return users.value.filter(user => {
-    const matchesSearch = 
-      user.fullName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      user.ipssNumber.toString().includes(searchQuery.value)
-    
-    if (!matchesSearch) return false
-    
-    if (roleFilter.value !== 'all' && user.role !== roleFilter.value) {
-      return false
-    }
-    
-    if (statusFilter.value !== 'all' && user.status !== statusFilter.value) {
-      return false
-    }
-    
-    return true
-  })
-})
-
-
-
-
-// Export data in excel format
-const exportUserData = async () => {
-  isLoading.value = true
-  try {
-    const token = localStorage.getItem('auth_token')
-    const response = await axios.get(`${baseUrl}/dashboard/general-stats`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      responseType: 'blob', // 👈 very important
-    })
-
-    // Create a blob from the response
-    const blob = new Blob([response.data], {
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    })
-
-    // Create a link element to download
-    const link = document.createElement('a')
-    link.href = window.URL.createObjectURL(blob)
-
-    // You can set a default filename
-    link.download = 'users-stats.xlsx'
-
-    // Append, click and remove the link
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-
-  } catch (error) {
-    console.error('Error fetching users data:', error)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-
-
-// Methods
+// Format currency
 const formatCurrency = (value) => {
-  return value.toLocaleString('en-NG', {
+  return Number(value || 0).toLocaleString('en-NG', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   })
 }
 
+// Format date
+const formatDate = (date) => {
+  if (!date) return '—'
+  return new Date(date).toLocaleDateString('en-NG', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  })
+}
+
+// Fetch Users
+const getUsersDetails = async () => {
+  isLoading.value = true
+  try {
+    const token = localStorage.getItem('auth_token')
+    const { data } = await axios.get(`${baseUrl}/auth/get-users-details`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+
+    // Normalize data
+    users.value = (data.users || []).map(user => {
+      const loan = user.approvedLoan
+      const installments = loan?.monthlyInstallment || []
+      const unpaid = installments.find(i => !i.paid)
+
+      let nextPaymentAmount = 0
+      let nextPaymentDate = null
+
+      if (unpaid && loan?.createdAt) {
+        nextPaymentAmount = unpaid.amount
+        const start = new Date(loan.createdAt)
+        const due = new Date(start)
+        due.setMonth(due.getMonth() + unpaid.month)
+        nextPaymentDate = due
+      }
+
+      return {
+        ...user,
+        ipssNumber: String(user.ipssNumber),
+        totalSaving: user.totalSaving || 0,
+        activeLoans: loan ? 1 : 0,
+        status: 'active', // API doesn't have status → assume active
+        nextPaymentAmount,
+        nextPaymentDate,
+        hasNextPayment: !!unpaid
+      }
+    })
+
+  } catch (error) {
+    console.error('Error:', error)
+    alertDetails.value = { type: 'error', message: 'Failed to load users' }
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Reset Password
+const saveNewPassword = async () => {
+  if (!newPassword.value || newPassword.value.length < 8) {
+    alertDetails.value = { type: 'error', message: 'Password must be 8+ chars' }
+    return
+  }
+
+  isLoading.value = true
+  try {
+    const token = localStorage.getItem('auth_token')
+    await axios.post(
+      `${baseUrl}/auth/resetPassword`,
+      { ipssNumber: selectedUser.value.ipssNumber, newPassword: newPassword.value },
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    alertDetails.value = { type: 'success', message: 'Password updated!' }
+    newPassword.value = ''
+  } catch (error) {
+    alertDetails.value = { type: 'error', message: error.response?.data?.error || 'Failed' }
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Computed: Filtered Users
+const filteredUsers = computed(() => {
+  return users.value.filter(user => {
+    const search = searchQuery.value.toLowerCase()
+    const matchesSearch = !search ||
+      user.fullName.toLowerCase().includes(search) ||
+      user.ipssNumber.includes(search)
+
+    const matchesRole = roleFilter.value === 'all' || user.role === roleFilter.value
+    const matchesStatus = statusFilter.value === 'all' || user.status === statusFilter.value
+
+    return matchesSearch && matchesRole && matchesStatus
+  })
+})
+
+// Actions
 const clearFilters = () => {
   searchQuery.value = ''
   roleFilter.value = 'all'
@@ -875,26 +701,16 @@ const clearFilters = () => {
 
 const openNewUserModal = () => {
   selectedUser.value = null
-  formUser.value = {
-    id: '',
-    name: '',
-    role: 'worker',
-    totalSaving: 0,
-    activeLoans: 0,
-    status: 'active',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-  }
+  formUser.value = { id: '', name: '', phone: '', role: 'worker' }
   isUserModalOpen.value = true
 }
 
 const closeUserModal = () => {
   isUserModalOpen.value = false
-  selectedUser.value = null
 }
 
 const viewUserDetails = (user) => {
   selectedUser.value = user
-  console.log(user)
   showDetailsModal.value = true
 }
 
@@ -903,20 +719,9 @@ const closeDetailsModal = () => {
   selectedUser.value = null
 }
 
-const editUser = (user) => {
-  selectedUser.value = user
-  formUser.value = { ...user }
-  isUserModalOpen.value = true
-}
-
 const handleUserSubmit = async () => {
   if (!formUser.value.id || !formUser.value.name) {
-    alert('Please fill in ID, name')
-    return
-  }
-
-  if (!selectedUser.value && users.value.some(u => u.id === formUser.value.id)) {
-    alert('User ID already exists')
+    alertDetails.value = { type: 'error', message: 'Fill ID & Name' }
     return
   }
 
@@ -924,49 +729,56 @@ const handleUserSubmit = async () => {
     fullName: formUser.value.name,
     ipssNumber: formUser.value.id,
     phoneNumber: formUser.value.phone,
+    role: formUser.value.role
   }
-
-  // if (selectedUser.value) {
-  //   alert('Editing existing users only updates display data. Savings and Loans data remain unchanged in this mock.')
-  //   closeUserModal()
-  //   return
-  // } else {
-  //   savingsData.value.push({
-  //     id: String(savingsData.value.length + 1),
-  //     userId: newUser.id,
-  //     userName: newUser.name,
-  //     amount: 0,
-  //     date: new Date(),
-  //     type: 'deposit',
-  //     balance: 0
-  //   })
-  // }
-
 
   isLoading.value = true
   try {
     const token = localStorage.getItem('auth_token')
-    const response = await axios.post(`${baseUrl}/auth/register`, newUser,{
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    await axios.post(`${baseUrl}/auth/register`, newUser, {
+      headers: { Authorization: `Bearer ${token}` }
     })
-
-    console.log(response.data)
-    alertDetails.value = {type:'success', message:`User ${newUser.fullName} created successfully`}
+    alertDetails.value = { type: 'success', message: 'User created!' }
     getUsersDetails()
   } catch (error) {
-    
-    console.log(error)
-    alertDetails.value = {type:'error', message:`${error.response.data.error}`}
-  }finally{
+    alertDetails.value = { type: 'error', message: error.response?.data?.error || 'Failed' }
+  } finally {
+    isLoading.value = false
+    closeUserModal()
+  }
+}
+
+// Export (keep your existing)
+const exportUserData = async () => {
+  isLoading.value = true
+  try {
+    const token = localStorage.getItem('auth_token')
+    const { data } = await axios.get(`${baseUrl}/dashboard/general-stats`, {
+      headers: { Authorization: `Bearer ${token}` },
+      responseType: 'blob'
+    })
+    const url = window.URL.createObjectURL(new Blob([data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'users-stats.xlsx'
+    link.click()
+  } catch (error) {
+    console.error(error)
+  } finally {
     isLoading.value = false
   }
-  
-  closeUserModal()
 }
+
+onMounted(() => {
+  getUsersDetails()
+})
 </script>
 
+
+
+
+
+// _________________________________________________________________
 <style scoped>
 /* Custom transitions */
 .fade-enter-active,

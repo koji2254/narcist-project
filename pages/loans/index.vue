@@ -100,7 +100,7 @@
                 ₦{{ loan.amount.toLocaleString() }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ loan.duration }} months
+                {{ loan.term_month }} months
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span
@@ -116,7 +116,15 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ formatDate(loan.nextPayment) }}
+                <div v-if="loan.hasNextPayment">
+                  ₦{{ loan.nextPaymentAmount.toLocaleString() }} 
+                  <span class="block text-xs text-gray-500">
+                    {{ formatDate(loan.nextPaymentDate) }}
+                  </span>
+                </div>
+                <div v-else class="text-xs text-gray-500">
+                  Fully Paid
+                </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button
@@ -188,12 +196,19 @@
             </div>
             <div>
               <p class="text-xs font-medium text-gray-500">Duration</p>
-              <p class="text-sm font-semibold text-gray-900">{{ loan.monthlyInstallment.length }} months</p>
+              <!-- <p class="text-sm font-semibold text-gray-900">{{ loan.monthlyInstallment.length }} months</p> -->
+              <p class="text-sm font-semibold text-gray-900">{{ loan.term_month }} months</p>
             </div>
-            <!-- <div>
-              <p class="text-xs font-medium text-gray-500">Next Payment</p>
-              <p class="text-sm font-semibold text-gray-900">{{ formatDate(loan.nextPayment) }}</p>
-            </div> -->
+          <div>
+            <p class="text-xs font-medium text-gray-500">Next Payment</p>
+            <p class="text-sm font-semibold text-gray-900" v-if="loan.hasNextPayment">
+              ₦{{ loan.nextPaymentAmount.toLocaleString() }} 
+              <span class="block text-xs text-gray-400">
+                {{ formatDate(loan.nextPaymentDate) }}
+              </span>
+            </p>
+            <p class="text-sm text-gray-500" v-else>Fully Paid</p>
+          </div>
           </div>
           <div class="px-4 py-3 bg-gray-50 flex justify-end space-x-3">
             <button
@@ -639,19 +654,9 @@ import AlertCard from '~/components/AlertCard.vue'
 
 // State remains unchanged
 const searchQuery = ref('')
-const statusFilter = ref('pending')
+const statusFilter = ref('approved')
 const isLoading = ref(true)
-const loans = ref([
-  // {
-  //   id: '2',
-  //   ipssNumber: 'USR002',
-  //   userName: 'Jane Smith',
-  //   amount: 250000,
-  //   duration: 12,
-  //   status: 'approvedd',
-  //   nextPayment: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
-  // }
-])
+const loans = ref([])
 const showNewLoanModal = ref(false)
 const showDetailsModal = ref(false)
 const showProcessModal = ref(false)
@@ -683,32 +688,50 @@ const alertDetails = ref(null)
 
 const showAlertModal = ref(false)
 
-
 const getAlLoans = async () => {
   isLoading.value = true
   try {
-
-    const stats = {
-      status: statusFilter.value,
-    }
-
     const token = localStorage.getItem('auth_token')
-    const response = await axios.post(`${baseUrl}/loan/get-loans-by-status`, stats,{
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const { data } = await axios.post(
+      `${baseUrl}/loan/get-loans-by-status`,
+      { status: statusFilter.value },
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+
+    // Normalize + compute nextPayment
+    loans.value = (data.Loans || []).map(loan => {
+      const installments = loan.monthlyInstallment || []
+      const unpaid = installments.find(inst => !inst.paid)
+
+      // Estimate due date: assume loan started on `createdAt`
+      const startDate = new Date(loan.createdAt)
+      const nextMonth = unpaid ? unpaid.month : null
+      let nextDueDate = null
+
+      if (nextMonth) {
+        const due = new Date(startDate)
+        due.setMonth(due.getMonth() + nextMonth)
+        nextDueDate = due
+      }
+
+      return {
+        ...loan,
+        ipssNumber: String(loan.ipssNumber),
+        nextPaymentAmount: unpaid ? unpaid.amount : 0,
+        nextPaymentDate: nextDueDate,
+        hasNextPayment: !!unpaid
+      }
     })
 
-    const fetchedLoans = response.data.Loans
-    loans.value = fetchedLoans  // ✅ safe assignment
-
-    console.log(fetchedLoans)   // ✅ safe to log
   } catch (error) {
-    console.error('Error fetching savings history:', error)
+    console.error('Error:', error)
+    alertDetails.value = { type: 'error', message: 'Failed to load loans' }
+    loans.value = []
   } finally {
     isLoading.value = false
   }
 }
+
 
 watch(statusFilter, (newStatus) => {
   console.log('Status changed to:', newStatus)
@@ -721,27 +744,27 @@ onMounted(() => {
 
 // Computed remains unchanged
 const filteredLoans = computed(() => {
+  const search = searchQuery.value.toLowerCase().trim()
+
   return loans.value.filter(loan => {
-    const matchesSearch = 
-      loan.fullName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      loan.ipssNumber.toLowerCase().includes(searchQuery.value.toLowerCase())
-    
-    if (!matchesSearch) return false
-    
-    if (statusFilter.value !== 'all' && loan.status !== statusFilter.value) {
-      return false
-    }
-    
-    return true
+    const ipss = String(loan.ipssNumber || '').toLowerCase()
+    const name = String(loan.fullName || loan.userName || '').toLowerCase()
+
+    const matchesSearch = !search || name.includes(search) || ipss.includes(search)
+    const matchesStatus = statusFilter.value === 'all' || loan.status === statusFilter.value
+
+    return matchesSearch && matchesStatus
   })
 })
 
+
 // Methods remain unchanged
 const formatDate = (date) => {
+  if (!date) return '—'
   return new Date(date).toLocaleDateString('en-NG', {
-    year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
+    year: 'numeric'
   })
 }
 
@@ -768,34 +791,31 @@ const closeAlertModal = () => {
 }
 
 watch(() => newLoan.value.ipssNumber, async (val) => {
-  // Restrict input to 6 characters
   if (val.length > 6) {
     newLoan.value.ipssNumber = val.slice(0, 6)
     return
   }
 
-  // Make request when exactly 6 characters
   if (val.length === 6) {
     isLoading.value = true
     try {
       const token = localStorage.getItem('auth_token')
-      const response = await axios.get(`${baseUrl}/auth/user/search?ipssNumber=${val}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+      const { data } = await axios.get(`${baseUrl}/auth/user/search?ipssNumber=${val}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
 
-      const user = response.data.user
-      user.value = response.data.user
-      newLoan.value.userName = user.value.fullName || '' // fallback in case fullName is undefined
-
+      // Fix: Direct assignment from response
+      const fetchedUser = data.user
+      if (fetchedUser) {
+        newLoan.value.userName = fetchedUser.fullName || fetchedUser.name || 'Unknown'
+      } else {
+        throw new Error('User not found')
+      }
     } catch (error) {
-      console.error('User search failed:', error)
-      alertDetails.value = {type:'error', message:'User not found'}
-      showAlertModal.value = true
-      user.value = null
+      alertDetails.value = { type: 'error', message: 'User not found or invalid IPSS' }
+      newLoan.value.userName = ''
     } finally {
-       isLoading.value = false
+      isLoading.value = false
     }
   }
 })
@@ -846,39 +866,34 @@ const getLoanTerm = async () => {
 }
 
 const saveLoanInfo = async () => {
+  if (!loanTerm.value) return
 
   isLoading.value = true
   const loanMain = {
-      ...newLoan.value,
-      term_month: newLoan.value.duration
-    }
+    ipssNumber: newLoan.value.ipssNumber,
+    amount: newLoan.value.amount,
+    term_month: newLoan.value.duration
+  }
 
   try {
     const token = localStorage.getItem('auth_token')
-    const response = await axios.post(`${baseUrl}/loan/create-loan`,loanMain ,{
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    await axios.post(`${baseUrl}/loan/create-loan`, loanMain, {
+      headers: { Authorization: `Bearer ${token}` }
     })
 
-    if(response.status >= 200 && response.status < 300){
-      // alert(`Loan of ${loanMain.amount} was Successfull`)
-      isLoading.value = false
-      alertDetails.value = { type:'success', message:`Loan of ${loanMain.amount.toLocaleString()} was Successfull` }
-      // get all the loans || it should be with the state manager
-      getAlLoans()
-      
-      showLaonTermModal.value = false
-    }
-    
+    alertDetails.value = { type: 'success', message: `Loan created: ₦${loanMain.amount.toLocaleString()}` }
 
-  
+    // Critical: Refresh loans
+    await getAlLoans()
+
+    // Reset & close
+    closeLoanTermModal()
+    newLoan.value = { ipssNumber: '', userName: '', amount: 0, duration: 0 }
   } catch (error) {
-    console.log(error)    
-  }finally {
+    alertDetails.value = { type: 'error', message: error.response?.data?.error || 'Failed to create loan' }
+  } finally {
     isLoading.value = false
   }
-
 }
 
 const viewLoanDetails = (loan) => {
@@ -895,10 +910,9 @@ const processLoan = (loan) => {
   processingLoan.value = {
     amount: loan.amount,
     ipssNumber: loan.ipssNumber,
-    userName: loan.fullName,
-    totalInterestAmount: loan.totalInterestAmount
+    userName: loan.fullName,  // not loan.userName
+    totalInterestAmount: loan.totalInterestAmount || 0
   }
-
   processAction.value = 'approved'
   showProcessModal.value = true
 }
@@ -909,42 +923,30 @@ const closeProcessModal = () => {
 }
 
 const confirmProcessLoan = async () => {
-  
   isLoading.value = true
   const statusInfo = {
-      status: processAction.value,
-      ipssNumber: processingLoan.value.ipssNumber
-    }
+    status: processAction.value,
+    ipssNumber: processingLoan.value.ipssNumber
+  }
 
   try {
     const token = localStorage.getItem('auth_token')
-    const response = await axios.patch(`${baseUrl}/loan/update-status`,statusInfo ,{
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    await axios.patch(`${baseUrl}/loan/update-status`, statusInfo, {
+      headers: { Authorization: `Bearer ${token}` }
     })
 
-    if(response.status >= 200 && response.status < 300){
-      alertDetails.value = { type:'success', message:`Loan ${processingLoan.value.amount.toLocaleString()} ${statusInfo.status}`}
-      
-      // get all the loans || it should be with the state manager
-      getAlLoans()
-      
-      showLaonTermModal.value = false
-    }
-    
+    alertDetails.value = { type: 'success', message: `Loan ${statusInfo.status}!` }
 
-  
+    // Critical: Refresh
+    await getAlLoans()
+
   } catch (error) {
-    console.log(error)  
-    alertDetails.value = { type:'error', message: `${error.response.data.error || error.response.data.message}` }  
-  }finally {
+    alertDetails.value = { type: 'error', message: error.response?.data?.error || 'Update failed' }
+  } finally {
     isLoading.value = false
+    showProcessModal.value = false
+    processingLoan.value = {}
   }
-
-
-  showProcessModal.value = false
-  processingLoan.value = null
 }
 
 const makeLoanPayment = (loan) => {
@@ -952,7 +954,7 @@ const makeLoanPayment = (loan) => {
     amount: loan.amount,
     ipssNumber: loan.ipssNumber,
     userName: loan.fullName,
-    installments: loan.monthlyInstallment
+    installments: loan.monthlyInstallment || []
   }
 
   loanPaymentForm.value = {
@@ -962,6 +964,7 @@ const makeLoanPayment = (loan) => {
 
   loanPaymentModal.value = true
 }
+
 
 const closeCompleteModal = () => {
    loanPaymentForm.value = {
@@ -977,56 +980,37 @@ const closeCompleteModal = () => {
 
 // confirmCompleteLoan = async () => {
 const confirmCompleteLoan = async () => {
-
-  if(loanPaymentForm.value.amount === 0 || loanPaymentForm.value.amount === ''){
-
-    return alertDetails.value = {type:'error', message:'Input a valid amount'}
+  if (!loanPaymentForm.value.amount || loanPaymentForm.value.amount <= 0) {
+    alertDetails.value = { type: 'error', message: 'Enter a valid amount' }
+    return
   }
 
-  console.log(loanPaymentForm)
-  
   isLoading.value = true
   const dataInfo = {
-      amount: loanPaymentForm.value.amount,
-      ipssNumber: loanPaymentForm.value.ipssNumber
-    }
+    amount: Number(loanPaymentForm.value.amount),
+    ipssNumber: loanPaymentForm.value.ipssNumber
+  }
 
   try {
     const token = localStorage.getItem('auth_token')
-    const response = await axios.post(`${baseUrl}/loan/make-payment`,dataInfo ,{
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    await axios.post(`${baseUrl}/loan/make-payment`, dataInfo, {
+      headers: { Authorization: `Bearer ${token}` }
     })
 
-    if(response.status >= 200 && response.status < 300){
-      alertDetails.value = {type:'success', message: `Payment of ${dataInfo.amount.toLocaleString()} is successfull`}
-      
-      // get all the loans || it should be with the state manager
-      
-      
+    alertDetails.value = { type: 'success', message: `Payment of ₦${dataInfo.amount.toLocaleString()} successful` }
 
-      loanPaymentModal.value = false
-      completingLoan.value = null
+    // Critical: Refresh loans
+    await getAlLoans()
 
-      loanPaymentForm.value = {
-        ipssNumber: '',
-        amount: ''
-      }
-      
-      getAlLoans()
-     
-    }
-      
+    // Reset form
+    loanPaymentForm.value = { ipssNumber: '', amount: '' }
+    loanPaymentModal.value = false
+    completingLoan.value = {}
+
   } catch (error) {
-    console.log(error)  
-
-    alertDetails.value = {type:'error', message: `${error.response.data.error || error.response.data.message}`}
-  }finally {
-     getAlLoans()
+    alertDetails.value = { type: 'error', message: error.response?.data?.error || 'Payment failed' }
+  } finally {
     isLoading.value = false
-
-
   }
 }
 
@@ -1103,7 +1087,7 @@ const exportLoanFile = async () => {
   }
 };
 
-// 
+ 
 
 const closeDateExportRange = () => {
   showDateExportRange.value = false

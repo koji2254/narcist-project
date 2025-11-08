@@ -1,170 +1,191 @@
 <template>
   <Spinner v-if="isLoading" />
-  <div class="container mx-auto px-4 py-4 bg-white">
+
+  <div class="container mx-auto px-4 py-6 bg-gray-50 min-h-screen">
     <!-- Header -->
-    <header class="mb-6 flex items-center gap-2">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        height="22px"
-        viewBox="0 -960 960 960"
-        width="22px"
-        fill="#0BAE3C"
-      >
-        <path
-          d="m438-338 226-226-57-57-169 169-84-84-57 57 141 141Zm42 258q-139-35-229.5-159.5T160-516v-244l320-120 320 120v244q0 152-90.5 276.5T480-80Zm0-84q104-33 172-132t68-220v-189l-240-90-240 90v189q0 121 68 220t172 132Zm0-316Z"
-        />
+    <header class="mb-8 flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#0BAE3C]" viewBox="0 -960 960 960" fill="currentColor">
+        <path d="m438-338 226-226-57-57-169 169-84-84-57 57 141 141Zm42 258q-139-35-229.5-159.5T160-516v-244l320-120 320 120v244q0 152-90.5 276.5T480-80Zm0-84q104-33 172-132t68-220v-189l-240-90-240 90v189q0 121 68 220t172 132Zm0-316Z"/>
       </svg>
-      <h1 class="text-lg font-semibold text-gray-700">Profile</h1>
+      <h1 class="text-2xl font-bold text-gray-900">Profile</h1>
     </header>
 
-    <!-- Profile Info -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-4">
-      <div v-if="userStats">
-        <h2 class="font-semibold text-base text-gray-800">{{ userStats.fullName }}</h2>
+    <!-- Profile Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+      <div class="flex items-start gap-4">
+        <!-- Avatar placeholder -->
+        <div class="bg-gray-200 border-2 border-dashed rounded-full w-20 h-20 flex-shrink-0"></div>
 
-        <div class="flex items-center gap-2 text-gray-600 text-sm mt-1">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            class="w-4 h-4"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M2 3.5A1.5 1.5 0 0 1 3.5 2h1.148a1.5 1.5 0 0 1 1.465 1.175l.716 3.223a1.5 1.5 0 0 1-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 0 0 6.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 0 1 1.767-1.052l3.223.716A1.5 1.5 0 0 1 18 15.352V16.5a1.5 1.5 0 0 1-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 0 1 2.43 8.326 13.019 13.019 0 0 1 2 5V3.5Z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          <span>+234 {{ userStats.phoneNumber ?? "No phone provided" }}</span>
+        <div class="flex-1">
+          <h2 class="text-xl font-semibold text-gray-900">{{ userStats?.fullName ?? '-' }}</h2>
+          <p class="text-sm text-gray-500 mt-1">IPSS Number: <span class="font-medium text-gray-700">{{ userStats?.ipssNumber ?? '-' }}</span></p>
+
+          <div class="mt-3 space-y-2 text-sm">
+            <div class="flex items-center gap-2 text-gray-600">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+              <span>+234 {{ formatPhone(userStats?.phoneNumber) }}</span>
+            </div>
+
+            <div class="flex items-center gap-2 text-gray-600">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span class="capitalize">{{ userStats?.role ?? 'user' }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Password Reset Section -->
-    <div v-if="userStats" class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-      <h3 class="text-gray-800 text-base font-medium mb-3">Reset Password</h3>
+    <!-- Password Reset Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <h3 class="text-lg font-medium text-gray-800 mb-5 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#0BAE3C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        Reset Password
+      </h3>
 
-      <!-- Old Password -->
-      <div class="mb-3">
-        <label for="old_password" class="block text-sm text-gray-700 mb-1">
-          Old Password
-        </label>
-        <input
-          id="old_password"
-          v-model="old_password"
-          type="password"
-          placeholder="********"
-          class="w-full rounded-md border border-gray-300 py-1.5 px-2 text-gray-900 text-sm focus:ring-2 focus:ring-green-600 outline-none"
-        />
-      </div>
+      <form @submit.prevent="resetPassword" class="space-y-4">
+        <!-- Old Password -->
+        <div>
+          <label for="old_password" class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+          <input
+            id="old_password"
+            v-model="old_password"
+            type="password"
+            required
+            placeholder="Enter current password"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#0BAE3C] focus:border-transparent"
+          />
+        </div>
 
-      <!-- New Password -->
-      <div class="mb-3">
-        <label for="new_password" class="block text-sm text-gray-700 mb-1">
-          New Password
-        </label>
-        <input
-          id="new_password"
-          v-model="new_password"
-          type="password"
-          placeholder="********"
-          class="w-full rounded-md border border-gray-300 py-1.5 px-2 text-gray-900 text-sm focus:ring-2 focus:ring-green-600 outline-none"
-        />
-      </div>
+        <!-- New Password -->
+        <div>
+          <label for="new_password" class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+          <input
+            id="new_password"
+            v-model="new_password"
+            type="password"
+            required
+            placeholder="At least 8 characters"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#0BAE3C] focus:border-transparent"
+          />
+          <p v-if="new_password && new_password.length < 8" class="mt-1 text-xs text-red-600">Password must be 8+ characters</p>
+        </div>
 
-      <!-- Confirm Password -->
-      <div class="mb-3">
-        <label for="confirm_password" class="block text-sm text-gray-700 mb-1">
-          Confirm New Password
-        </label>
-        <input
-          id="confirm_password"
-          v-model="comfirm_password"
-          type="password"
-          placeholder="********"
-          class="w-full rounded-md border border-gray-300 py-1.5 px-2 text-gray-900 text-sm focus:ring-2 focus:ring-green-600 outline-none"
-        />
-      </div>
+        <!-- Confirm Password -->
+        <div>
+          <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+          <input
+            id="confirm_password"
+            v-model="confirm_password"
+            type="password"
+            required
+            placeholder="Repeat new password"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#0BAE3C] focus:border-transparent"
+          />
+          <p v-if="confirm_password && new_password !== confirm_password" class="mt-1 text-xs text-red-600">Passwords do not match</p>
+        </div>
 
-      <!-- Button -->
-      <div class="flex justify-end mt-4">
-        <button
-          @click="resetPassword"
-          class="bg-green-700 text-white px-4 py-2 rounded-md text-sm hover:bg-green-600 transition-all"
-        >
-          Reset Password
-        </button>
-      </div>
+        <!-- Submit -->
+        <div class="flex justify-end pt-3">
+          <button
+            type="submit"
+            :disabled="isSubmitting"
+            class="inline-flex items-center px-5 py-2 bg-[#0BAE3C] text-white font-medium text-sm rounded-md hover:bg-[#0a9a34] focus:outline-none focus:ring-2 focus:ring-[#0BAE3C] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <svg v-if="isSubmitting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ isSubmitting ? 'Updating...' : 'Update Password' }}
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </template>
-
 <script setup>
-import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
-import { baseUrl } from "~/assets/proxy";
-import Spinner from "~/components/Spinner.vue";
-import axios from "axios";
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
+import { baseUrl } from '~/assets/proxy'
+import Spinner from '~/components/Spinner.vue'
 
-const router = useRouter();
-const isLoading = ref(true);
-const userStats = ref(null);
-const old_password = ref("");
-const new_password = ref("");
-const comfirm_password = ref("");
+const isLoading = ref(true)
+const isSubmitting = ref(false)
+const userStats = ref(null)
 
-// Fetch user data
+const old_password = ref('')
+const new_password = ref('')
+const confirm_password = ref('')
+
+// Format phone: 7055556666 → 705 555 6666
+const formatPhone = (num) => {
+  if (!num) return '-'
+  const str = String(num)
+  return `${str.slice(0, 3)} ${str.slice(3, 6)} ${str.slice(6)}`
+}
+
+// Fetch user profile
 const getUserDash = async () => {
-  isLoading.value = true;
+  isLoading.value = true
   try {
-    const token = localStorage.getItem("auth_token");
-    const response = await axios.get(`${baseUrl}/dashboard/user`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    userStats.value = response.data;
-  } catch (error) {
-    console.error("Error fetching user data:", error);
+    const token = localStorage.getItem('auth_token')
+    const { data } = await axios.get(`${baseUrl}/dashboard/user`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    userStats.value = data
+  } catch (err) {
+    console.error('Failed to load profile:', err)
+    alert('Could not load profile. Please try again.')
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
-};
+}
 
 // Reset password
 const resetPassword = async () => {
-  if (!new_password.value || new_password.value.length < 8) {
-    alert("Password must be at least 8 characters.");
-    return;
+  // Validation
+  if (new_password.value.length < 8) {
+    alert('New password must be at least 8 characters.')
+    return
+  }
+  if (new_password.value !== confirm_password.value) {
+    alert('New passwords do not match.')
+    return
   }
 
-  if (new_password.value !== comfirm_password.value) {
-    alert("Passwords do not match.");
-    return;
-  }
-
-  isLoading.value = true;
+  isSubmitting.value = true
   try {
-    const token = localStorage.getItem("auth_token");
+    const token = localStorage.getItem('auth_token')
     await axios.post(
       `${baseUrl}/auth/changePassword`,
       {
         oldPassword: old_password.value,
-        newPassword: new_password.value,
+        newPassword: new_password.value
       },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-    alert("Password updated successfully!");
-    old_password.value = "";
-    new_password.value = "";
-    comfirm_password.value = "";
-  } catch (error) {
-    console.error("Error resetting password:", error);
-    alert("Failed to reset password.");
-  } finally {
-    isLoading.value = false;
-  }
-};
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
 
-onMounted(() => getUserDash());
+    alert('Password updated successfully!')
+    old_password.value = ''
+    new_password.value = ''
+    confirm_password.value = ''
+  } catch (err) {
+    const msg = err.response?.data?.error || 'Failed to update password.'
+    alert(msg)
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+onMounted(() => {
+  getUserDash()
+})
 </script>
+<style scoped>
+/* No extra CSS needed — everything uses Tailwind */
+</style>

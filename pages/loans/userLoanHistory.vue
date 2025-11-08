@@ -1,8 +1,37 @@
 <template>
   <div class="p-6 bg-gray-50 min-h-screen">
-    <h3 class="text-xl font-semibold mb-6 text-gray-800 flex items-center gap-1 space-x-2">
-    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#7781EE"><path d="M336-120q-91 0-153.5-62.5T120-336q0-38 13-74t37-65l142-171-97-194h530l-97 194 142 171q24 29 37 65t13 74q0 91-63 153.5T624-120H336Zm144-200q-33 0-56.5-23.5T400-400q0-33 23.5-56.5T480-480q33 0 56.5 23.5T560-400q0 33-23.5 56.5T480-320Zm-95-360h190l40-80H345l40 80Zm-49 480h288q57 0 96.5-39.5T760-336q0-24-8.5-46.5T728-423L581-600H380L232-424q-15 18-23.5 41t-8.5 47q0 57 39.5 96.5T336-200Z"/></svg>
-    Loan History</h3>
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#7781EE">
+          <path d="M336-120q-91 0-153.5-62.5T120-336q0-38 13-74t37-65l142-171-97-194h530l-97 194 142 171q24 29 37 65t13 74q0 91-63 153.5T624-120H336Zm144-200q-33 0-56.5-23.5T400-400q0-33 23.5-56.5T480-480q33 0 56.5 23.5T560-400q0 33-23.5 56.5T480-320Zm-95-360h190l40-80H345l40 80Zm-49 480h288q57 0 96.5-39.5T760-336q0-24-8.5-46.5T728-423L581-600H380L232-424q-15 18-23.5 41t-8.5 47q0 57 39.5 96.5T336-200Z"/>
+        </svg>
+        <h3 class="text-xl font-semibold text-gray-800">
+          Loan History
+          <span v-if="totalUnpaidAmount > 0" class="text-sm text-red-600 font-medium ml-2">
+            (₦{{ formatCurrency(totalUnpaidAmount) }} Unpaid)
+          </span>
+        </h3>
+      </div>
+
+      <!-- ✅ Refresh Button -->
+    <button
+      @click="refreshLoans"
+      :disabled="isLoading"
+      class="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+    >
+      <svg v-if="!isLoading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v6h6M20 20v-6h-6M4 10a8 8 0 0114.32-4.906M20 14a8 8 0 01-14.32 4.906" />
+      </svg>
+      <svg v-else class="w-4 h-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+      <span>{{ isLoading ? 'Refreshing...' : 'Refresh' }}</span>
+    </button>
+
+    </div>
+
+
 
     <div v-if="isLoading" class="flex justify-center items-center py-12">
       <Spinner />
@@ -177,6 +206,29 @@ const getUserLoanHistory = async () => {
     isLoading.value = false
   }
 }
+
+const totalUnpaidAmount = computed(() => {
+  if (!activeLoanList.value.Loans) return 0
+
+  return activeLoanList.value.Loans.reduce((total, loan) => {
+    const unpaidSum = loan.monthlyInstallment
+      ?.filter((inst) => !inst.paid)
+      .reduce((sum, inst) => sum + inst.amount, 0) || 0
+
+    return total + unpaidSum
+  }, 0)
+})
+
+const refreshLoans = async () => {
+  isLoading.value = true
+  try {
+    await getUserLoanHistory()
+  } finally {
+    isLoading.value = false
+  }
+}
+
+
 
 onMounted(() => getUserLoanHistory())
 </script>

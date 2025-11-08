@@ -1,279 +1,158 @@
 <template>
   <Spinner v-if="isLoading" />
-    <div class="container mx-auto px-4 py-2 bg-white">
-      <header class="mb-4">
-        <h1 class="text-xl font-bold text-gray-700 flex items-center gap-2">
-         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#0BAE3C"><path d="M200-200v-560 560Zm0 80q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v100h-80v-100H200v560h560v-100h80v100q0 33-23.5 56.5T760-120H200Zm320-160q-33 0-56.5-23.5T440-360v-240q0-33 23.5-56.5T520-680h280q33 0 56.5 23.5T880-600v240q0 33-23.5 56.5T800-280H520Zm280-80v-240H520v240h280Zm-160-60q25 0 42.5-17.5T700-480q0-25-17.5-42.5T640-540q-25 0-42.5 17.5T580-480q0 25 17.5 42.5T640-420Z"/></svg>
-          Savings
-        </h1>
-        <div class="flex items-start justify-between">
-          <h4 v-if="userStats" class="font-semibold p-2 my-2 flex items-center gap-1">₦{{ formatCurrency(userStats.totalSaving) }}</h4>
-          <!-- <h4 class="p-2 my-2 flex items-center gap-1">
-           <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Zm40-308 198-252H282l198 252Zm0 0Z"/></svg> sort
-          </h4> -->
+
+  <div class="container mx-auto px-4 py-6 bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="mb-8">
+      <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#0BAE3C]" viewBox="0 -960 960 960" fill="currentColor">
+          <path d="M200-200v-560 560Zm0 80q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v100h-80v-100H200v560h560v-100h80v100q0 33-23.5 56.5T760-120H200Zm320-160q-33 0-56.5-23.5T440-360v-240q0-33 23.5-56.5T520-680h280q33 0 56.5 23.5T880-600v240q0 33-23.5 56.5T800-280H520Zm280-80v-240H520v240h280Zm-160-60q25 0 42.5-17.5T700-480q0-25-17.5-42.5T640-540q-25 0-42.5 17.5T580-480q0 25 17.5 42.5T640-420Z"/>
+        </svg>
+        Savings
+      </h1>
+
+      <!-- Total Savings -->
+      <div class="mt-3 bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600">Total Balance</p>
+            <p class="text-2xl font-bold text-gray-900">₦{{ formatCurrency(userStats?.totalSaving ?? 0) }}</p>
+          </div>
+          <div class="bg-[#0BAE3C] bg-opacity-10 rounded-full p-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#0BAE3C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
         </div>
-      </header>
-  
-      <div class="bg-white rounded-lg">
-        
-        <div class="space-y-2">
-            <div v-if="savingsTransactions && savingsTransactions.length">
-              <div
-                v-for="(tx, index) in savingsTransactions"
-                :key="tx._id || index"
-                class="bg-gray-50 shadow mb-2"
-              >
-                <!-- Amount Header -->
-                <h3 class="text-md flex items-center p-2 py-1">
-                  <!-- Icon changes by type -->
-                  <svg
-                    v-if="tx.type === 'deposit'"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="#38C24D"
-                    class="size-6"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 
-                        1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-
-                        1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-
-                        1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 
-                        1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 
-                        0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 
-                        1.5v-.75A.75.75 0 0 0 3 15h-.75M15 
-                        10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 
-                        0h.008v.008H18V10.5Zm-12 
-                        0h.008v.008H6V10.5Z"
-                    />
-                  </svg>
+      </div>
+    </header>
 
-                  <svg
-                    v-else-if="tx.type === 'withdrawal'"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="#8B1A10"
-                    class="size-6"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M2.25 18.75a60.07 60.07 0 0 1 
-                        15.797 2.101c.727.198 1.453-.342 
-                        1.453-1.096V18.75M3.75 
-                        4.5v.75A.75.75 0 0 1 3 6h-.75m0 
-                        0v-.375c0-.621.504-1.125 
-                        1.125-1.125H20.25M2.25 6v9m18-
-                        10.5v.75c0 .414.336.75.75.75h.75m-1.5-
-                        1.5h.375c.621 0 1.125.504 
-                        1.125 1.125v9.75c0 .621-.504 
-                        1.125-1.125 1.125h-.375m1.5-
-                        1.5H21a.75.75 0 0 0-.75.75v.75m0 
-                        0H3.75m0 0h-.375a1.125 1.125 
-                        0 0 1-1.125-1.125V15m1.5 
-                        1.5v-.75A.75.75 0 0 0 3 
-                        15h-.75M15 10.5a3 3 0 1 1-6 
-                        0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 
-                        0h.008v.008H6V10.5Z"
-                    />
-                  </svg>
+    <!-- Transactions List -->
+    <div class="space-y-3">
+      <!-- Empty State -->
+      <div v-if="!isLoading && (!savingsTransactions || savingsTransactions.length === 0)" class="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
+        <div class="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+          </svg>
+        </div>
+        <p class="text-gray-600 font-medium">No savings transactions yet</p>
+        <p class="text-sm text-gray-500 mt-1">Your deposits and withdrawals will appear here</p>
+      </div>
 
-                  <span class="text-sm font-semibold my-1 p-2 py-1">
-                    ₦{{ formatCurrency(tx.amount) }}
-                  </span>
-                </h3>
-
-                <!-- Label -->
-                <div
-                  class="flex items-center text-xs px-6"
-                  :class="tx.type === 'deposit' ? 'text-green-700' : 'text-red-700'"
-                >
-                  <svg
-                    v-if="tx.type === 'deposit'"
-                    xmlns="http://www.w3.org/2000/svg"
-                    height="24px"
-                    viewBox="0 -960 960 960"
-                    width="24px"
-                    fill="#78A75A"
-                  >
-                    <path
-                      d="M480-240 240-480l56-56 144 144v-368h80v368l144-144 
-                        56 56-240 240Z"
-                    />
-                  </svg>
-
-                  <svg
-                    v-else
-                    xmlns="http://www.w3.org/2000/svg"
-                    height="24px"
-                    viewBox="0 -960 960 960"
-                    width="24px"
-                    fill="#8B1A10"
-                  >
-                    <path
-                      d="M440-240v-368L296-464l-56-56 240-240 240 
-                        240-56 56-144-144v368h-80Z"
-                    />
-                  </svg>
-
-                  {{ tx.type === 'deposit' ? 'Deposit' : 'Withdrawal' }}
-                </div>
-
-                <!-- Date -->
-                <div
-                  class="flex justify-between w-full text-xs text-gray-600 p-2 bg-white"
-                >
-                  <div></div>
-                  <div class="font-semibold">
-                    {{ formatDate(tx.date) }}
-                  </div>
-                </div>
-              </div>
+      <!-- Transactions -->
+      <div v-else v-for="tx in savingsTransactions" :key="tx._id" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <!-- Icon -->
+            <div class="rounded-full p-2" :class="tx.type === 'deposit' ? 'bg-green-100' : 'bg-red-100'">
+              <svg v-if="tx.type === 'deposit'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12" />
+              </svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+              </svg>
             </div>
 
-            <div v-else>
-              <p>Loading Savings...</p>
+            <div>
+              <p class="font-medium text-gray-900 capitalize">{{ tx.type }}</p>
+              <p class="text-sm text-gray-500">{{ formatDate(tx.date) }}</p>
             </div>
           </div>
 
-
+          <div class="text-right">
+            <p class="text-lg font-semibold" :class="tx.type === 'deposit' ? 'text-green-600' : 'text-red-600'">
+              {{ tx.type === 'deposit' ? '+' : '-' }}₦{{ formatCurrency(tx.amount) }}
+            </p>
+          </div>
+        </div>
       </div>
-
     </div>
-  </template>
-  
-  <script setup>
-  import { ref, onMounted} from 'vue'
-  import { useRouter } from 'vue-router'
-  import { baseUrl } from '~/assets/proxy'
-  import Spinner from '~/components/Spinner.vue'
-  import axios from 'axios'
+  </div>
+</template>
 
   
-  // Mock user data (could be fetched from an API in a real app)
-  const router = useRouter()
-  const isLoading = ref(false)
-  const userStats = ref(null)
-  const savingsTransactions = ref([])
-  const lastSavingTransaction = ref([])
-  
-  const formatCurrency = (value) => {
-    return value.toLocaleString('en-NG', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    })
-  }
-  
+ <script setup>
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
+import { baseUrl } from '~/assets/proxy'
+import Spinner from '~/components/Spinner.vue'
 
+const isLoading = ref(true)
+const userStats = ref(null)
+const savingsTransactions = ref([])
+
+/* ------------------------------------------------------------------ */
+/* 1. Formatters                                                      */
+/* ------------------------------------------------------------------ */
+const formatCurrency = (value) => {
+  return Number(value ?? 0).toLocaleString('en-NG', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
+
+const formatDate = (dateStr) => {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('en-NG', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  })
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Fetch Dashboard (totalSaving)                                   */
+/* ------------------------------------------------------------------ */
 const getUserDash = async () => {
-  isLoading.value = true
   try {
-     const token = localStorage.getItem('auth_token')
-    const response = await axios.get(`${baseUrl}/dashboard/user`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const token = localStorage.getItem('auth_token')
+    const { data } = await axios.get(`${baseUrl}/dashboard/user`, {
+      headers: { Authorization: `Bearer ${token}` },
     })
-
-    
-    // console.log(user)
-    userStats.value = response.data
-    lastSavingTransaction.value = response.data.LastSavingTransaction
-    
-  } catch (error) {
-    console.error('Error fetching savings history:', error)
-  } finally {
-    isLoading.value = false
+    userStats.value = data
+  } catch (err) {
+    console.error('Dashboard fetch error:', err)
   }
 }
 
-
+/* ------------------------------------------------------------------ */
+/* 3. Fetch Transactions                                              */
+/* ------------------------------------------------------------------ */
 const getUserTransactions = async () => {
-    isLoading.value = true
   try {
-     const token = localStorage.getItem('auth_token')
-    const response = await axios.get(`${baseUrl}/saving/transactions`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const token = localStorage.getItem('auth_token')
+    const { data } = await axios.get(`${baseUrl}/saving/transactions`, {
+      headers: { Authorization: `Bearer ${token}` },
     })
 
-    
-    // console.log(user)
-    
-    savingsTransactions.value = response.data.transactions.sort(
+    // Sort newest first
+    savingsTransactions.value = (data.transactions || []).sort(
       (a, b) => new Date(b.date) - new Date(a.date)
     )
-    console.log(response.data)
-
-  } catch (error) {
-    console.error('Error fetching savings history:', error)
+  } catch (err) {
+    console.error('Transactions fetch error:', err)
   } finally {
     isLoading.value = false
   }
 }
-  
 
-const getUser = async () => {
+/* ------------------------------------------------------------------ */
+/* 4. Mount                                                           */
+/* ------------------------------------------------------------------ */
+onMounted(() => {
   isLoading.value = true
-  try {
-     const token = localStorage.getItem('auth_token')
-     const ipssNumber = {
-      ipssNumber
-     }
-    const response = await axios.post(`${baseUrl}/auth/user/get-user-details`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-
-
-    // console.log(user)
-    console.log(response.data)
-  } catch (error) {
-    console.error('Error fetching savings history:', error)
-  } finally {
+  Promise.all([getUserDash(), getUserTransactions()]).finally(() => {
     isLoading.value = false
-  }
-}
-
-
-  const logout = () => {
-    // Simple logout: Navigate back to login page
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('user_info')
-    router.push('../')
-  }
-
-  onMounted(() => {
-    getUserDash()
-    getUserTransactions()
-    getUser()
   })
-
-  // Date formatter
-  const formatDate = (dateStr) => {
-    const date = new Date(dateStr)
-    return date.toLocaleString('en-NG', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    })
-  }
+})
+</script>
 
 
-  </script>
   
-  <style scoped>
-  .btn-secondary {
-    @apply px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
-  }
-  </style>
+<style scoped>
+/* All styles are Tailwind classes */
+</style>
